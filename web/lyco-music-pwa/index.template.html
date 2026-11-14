@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Lyco Music · 网页只读入口 | lain42</title>
+  <meta name="description" content="Lyco Music 网页只读入口：复用桌面与移动端同一份 224 key 多语言字典，展示网易云歌单导入、搜歌单、音源兜底、四语切换与全平台下载引导。不登录、不播放、不写服务端数据。">
+  <link rel="canonical" href="https://lain42.top/lyco-music/">
+  <link rel="manifest" href="/lyco-music/manifest.webmanifest">
+  <link rel="icon" href="/lyco-music/icons/icon-192.png" sizes="192x192">
+  <link rel="icon" href="/lyco-music/icons/icon-512.png" sizes="512x512">
+  <link rel="apple-touch-icon" href="/lyco-music/icons/icon-192.png">
+  <link rel="stylesheet" href="/assets/studio.css">
+  <script defer src="/assets/studio.js?v=revive-20261030-142831"></script>
+  <style>
+    .pwa-wrap{max-width:min(100% - 2rem,1040px);margin:0 auto}
+    .pwa-hero{border:1px solid var(--line);border-radius:var(--radius-4xl);padding:40px 36px 34px;background:var(--bg-elev)}
+    .pwa-eyebrow{font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--fg-soft)}
+    .pwa-hero h1{font-size:clamp(28px,4.4vw,40px);font-weight:700;letter-spacing:-.04em;line-height:1.2;margin:18px 0 12px}
+    .pwa-lead{max-width:780px;font-size:16px;color:var(--fg-soft);line-height:1.85;margin:0 0 16px}
+    .pwa-note{border-left:3px solid var(--warning);padding:12px 16px;background:var(--bg-soft);border-radius:0 var(--radius-md) var(--radius-md) 0;font-size:14px;color:var(--fg-soft);line-height:1.85;margin:0 0 20px}
+    .pwa-actions{display:flex;flex-wrap:wrap;gap:10px}
+    .pwa-actions .button{min-height:44px;text-align:center}
+    .pwa-metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px;margin-top:26px}
+    .pwa-metric{border:1px solid var(--line);border-radius:var(--radius-lg);padding:15px 17px;background:var(--bg-soft)}
+    .pwa-metric b{font-size:26px;display:block;letter-spacing:-.03em;color:var(--fg)}
+    .pwa-metric small{color:var(--fg-soft);font-size:12px}
+    .pwa-section{padding-top:36px;scroll-margin-top:82px}
+    .pwa-section h2{font-size:26px;margin:0 0 8px;letter-spacing:-.02em}
+    .pwa-sub{font-size:14px;color:var(--fg-soft);line-height:1.85;margin:0 0 16px;max-width:820px}
+    .pwa-langs{display:flex;flex-wrap:wrap;gap:8px}
+    .pwa-lang{border:1px solid var(--line);border-radius:var(--radius-md);padding:9px 14px;font-size:14px;color:var(--fg);background:var(--bg-elev);cursor:pointer}
+    .pwa-lang:hover{border-color:var(--line-strong);background:var(--bg-soft)}
+    .pwa-lang.is-active{border-color:var(--brand);background:var(--brand-soft);color:var(--fg);font-weight:700}
+    .pwa-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:14px}
+    .pwa-card{border:1px solid var(--line);border-radius:var(--radius-xl);background:var(--bg-elev);padding:20px}
+    .pwa-card h3{font-size:18px;margin:0 0 8px}
+    .pwa-card p{font-size:14px;color:var(--fg-soft);line-height:1.8;margin:0}
+    .pwa-links{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:10px}
+    .pwa-links a{display:block;padding:14px 16px;border:1px solid var(--line);border-radius:var(--radius-md);font-size:14px;color:var(--fg);text-decoration:none;background:var(--bg-elev)}
+    .pwa-links a:hover{border-color:var(--line-strong);background:var(--bg-soft)}
+    .pwa-links small{display:block;color:var(--fg-soft);font-size:12px;line-height:1.7;margin-top:5px}
+    .pwa-footer{margin-top:36px;padding-top:20px;border-top:1px solid var(--line);color:var(--fg-soft);font-size:12px;line-height:1.9}
+    @media(max-width:700px){.pwa-hero{padding:28px 20px}.pwa-section{padding-top:28px}.pwa-section h2{font-size:22px}.pwa-card{padding:16px}}
+  </style>
+  <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+</head>
+<body data-studio-shell data-page-title="Lyco Music 网页只读入口">
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <main class="site-main" id="main">
+    <div class="pwa-wrap">
+      <header class="pwa-hero">
+        <div class="pwa-eyebrow" data-i18n="pwa.eyebrow"></div>
+        <h1 data-i18n="pwa.title"></h1>
+        <p class="pwa-lead" data-i18n="pwa.lead"></p>
+        <p class="pwa-note" data-i18n="pwa.readonly"></p>
+        <div class="pwa-actions">
+          <a class="button brand" href="/downloads/index.html?q=Lyco%20Music" data-i18n="pwa.cta.download"></a>
+          <a class="button secondary" href="/docs/lyco-music.html" data-i18n="pwa.cta.guide"></a>
+          <a class="button secondary" href="https://github.com/lilyco-42/lyco_music/releases/latest" data-i18n="pwa.cta.release"></a>
+        </div>
+        <div class="pwa-metrics">
+          <div class="pwa-metric"><b data-i18n-version></b><small data-i18n="pwa.metric.version"></small></div>
+          <div class="pwa-metric"><b data-i18n-keys></b><small data-i18n="pwa.metric.keys"></small></div>
+          <div class="pwa-metric"><b>4</b><small data-i18n="pwa.metric.langs"></small></div>
+          <div class="pwa-metric"><b>5</b><small data-i18n="pwa.metric.platforms"></small></div>
+        </div>
+        <div class="pwa-metrics"><div class="pwa-metric"><b data-i18n-total></b><small>core / mobile.search.total</small></div></div>
+      </header>
+      <section class="pwa-section" id="language">
+        <h2 data-i18n="settings.language"></h2>
+        <p class="pwa-sub" data-i18n="pwa.langNote"></p>
+        <div class="pwa-langs" id="pwa-langs" role="group" aria-label="Language"></div>
+      </section>
+      <section class="pwa-section" id="features">
+        <h2 data-i18n="pwa.features"></h2>
+        <div class="pwa-grid">
+          <article class="pwa-card"><h3 data-i18n="pwa.f1.title"></h3><p data-i18n="pwa.f1.body"></p></article>
+          <article class="pwa-card"><h3 data-i18n="pwa.f2.title"></h3><p data-i18n="pwa.f2.body"></p></article>
+          <article class="pwa-card"><h3 data-i18n="pwa.f3.title"></h3><p data-i18n="pwa.f3.body"></p></article>
+          <article class="pwa-card"><h3 data-i18n="pwa.f4.title"></h3><p data-i18n="pwa.f4.body"></p></article>
+          <article class="pwa-card"><h3 data-i18n="pwa.f5.title"></h3><p data-i18n="pwa.f5.body"></p></article>
+          <article class="pwa-card"><h3 data-i18n="pwa.f6.title"></h3><p data-i18n="pwa.f6.body"></p></article>
+        </div>
+      </section>
+      <section class="pwa-section" id="next">
+        <h2 data-i18n="pwa.next.title"></h2>
+        <p class="pwa-sub" data-i18n="pwa.next.body"></p>
+        <div class="pwa-links">
+          <a href="/downloads/index.html?q=Lyco%20Music"><span data-i18n="pwa.link.downloads"></span><small>SHA-256 · originMirror · r2Mirror</small></a>
+          <a href="/docs/lyco-music.html"><span data-i18n="pwa.link.guide"></span><small data-i18n="pwa.link.guideMeta"></small></a>
+          <a href="https://github.com/lilyco-42/lyco_music/releases/latest"><span data-i18n="pwa.link.release"></span><small>Apache-2.0</small></a>
+          <a href="/"><span data-i18n="pwa.cta.home"></span><small>lain42.top</small></a>
+        </div>
+      </section>
+      <footer class="pwa-footer" data-i18n="pwa.footer"></footer>
+    </div>
+  </main>
+  <script defer src="/lyco-music/app.js"></script>
+</body>
+</html>

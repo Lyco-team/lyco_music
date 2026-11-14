@@ -106,3 +106,36 @@ jobs:
 
       - name: Typecheck mobile app
         run: pnpm --filter @lxmn/app-mobile typecheck
+
+  pwa:
+    name: Web PWA (build, verify)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Install Pillow for icon generation
+        run: python3 -m pip install Pillow
+
+      - name: Build read-only PWA
+        run: node scripts/build-lyco-pwa.mjs
+
+      - name: Verify PWA artifacts
+        run: python3 scripts/check-lyco-pwa.py .
+
+      - name: Upload PWA dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: lyco-pwa-dist
+          path: web/lyco-music-pwa/dist
+          if-no-files-found: error
+          retention-days: 7

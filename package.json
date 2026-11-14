@@ -17,10 +17,13 @@
     "test:mobile": "jest --config apps/mobile/jest.config.js",
     "tokens:build": "pnpm --filter @lxmn/tokens build",
     "bump": "node scripts/bump-version.mjs",
-    "probe:download": "electron scripts/probe-download.cjs"
+    "probe:download": "electron scripts/probe-download.cjs",
+    "pwa:build": "node scripts/build-lyco-pwa.mjs",
+    "pwa:check": "python3 scripts/check-lyco-pwa.py ."
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
+    "esbuild": "^0.21.5",
     "typescript": "^5.9.3",
     "vitest": "^2.1.9"
   }

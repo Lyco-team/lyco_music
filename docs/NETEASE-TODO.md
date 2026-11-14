@@ -126,7 +126,7 @@
 | 全局媒体键 | 🟡 自研 `lib/hotkeys.ts` 8 个快捷键，非系统级媒体键 | `PARITY.md:171` | P1 |
 | 托盘菜单 | ✅ | `main.cjs` Tray 12 处 | — |
 | 系统代理 | ✅ session 级 | `PARITY.md:174` | — |
-| PWA / 网页版 | ❌ `vite.config.ts` 无 `pwa/manifest/sw` | `apps/desktop/vite.config.ts`（24 行） | P3 |
+| PWA / 网页版 | 🟡 独立只读展示页（四语 / manifest / SW，无播放与登录） | `web/lyco-music-pwa/` | P3 |
 
 ## 5. TODO 清单（按优先级，含验收标准）
 
@@ -197,7 +197,7 @@
 - **P3-1 听歌识曲**：需录音权限 + 指纹接口，移动端成本高，且接口稳定性未知。
 - **P3-2 一起听 / 私信 / 动态**：社交面，与现有 lyco 自有好友体系冲突，需先定产品口径。
 - **P3-3 听歌记录上报 / 年度报告**：涉及账号态与隐私，需用户明确授权。
-- **P3-4 PWA**：Electron 端无意义，若要网页版需单独立项。
+- **P3-4 PWA**：Electron 桌面端不内嵌 PWA；已另立只读展示页 `web/lyco-music-pwa/`（共用 core 字典、四语、可安装），完整网页播放器仍不在范围。
 
 ## 6. 与 PARITY 的关系
 

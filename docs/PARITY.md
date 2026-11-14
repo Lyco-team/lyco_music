@@ -190,7 +190,7 @@ lx 实际拥有的能力 = 99 − 7（我们独有）= **92 项**。
 | 7.1 | 浅色 / 深色主题 | 已 | 已 | |
 | 7.2 | 自定义主题编辑器 | 已 | 已 | 设置页取色器实时预览并持久化；进度条/次级强调色按主色混白 32% 自动推导（不做整块色板：结构色一改对比度就崩）。CDP 实测 #d43b52 → #1a73e8 生效并落盘 |
 | 7.3 | 界面字体大小（6 档） | 已 | 已 | 6 档整体缩放（CSS zoom；全站是 px 字面量，改根字号无效） |
-| 7.4 | 多语言（中/繁/英/韩） | 已 | 部分 | 字典抽到 `packages/core/src/i18n.ts` 桌面 / 移动端共用；桌面 `lib/i18n.ts` 薄适配 + 侧栏/顶栏/设置页，移动端账户页可切语言并持久化；四种语言可切。**zh-TW 由简体逐字转换**（与「歌词转繁体」同一张表），en/ko 手写。0.2.62 补齐移动端首页 / 搜索 / 我的音乐 / 账户首批高频文案，其余页面内部文案仍是中文，逐页补齐中 |
+| 7.4 | 多语言（中/繁/英/韩） | 已 | 部分 | 字典抽到 `packages/core/src/i18n.ts` 桌面 / 移动端共用；桌面 `lib/i18n.ts` 薄适配 + 侧栏/顶栏/设置页，移动端账户页可切语言并持久化；四种语言可切。**zh-TW 由简体逐字转换**（与「歌词转繁体」同一张表），en/ko 手写。0.2.62 补齐移动端首页 / 搜索 / 我的音乐 / 账户首批高频文案，网页只读入口 PWA 复用同一份字典；其余页面内部文案仍是中文，逐页补齐中 |
 | 7.5 | 窗口尺寸预设（6 档） | 已 | 已 | 迷你/标准/…；超出工作区自动夹回去并居中 |
 | 7.6 | 播放栏进度条样式（3 种） | 已 | 已 | 细线 / 粗条 / 圆点三档，悬停时放大；圆点样式常驻手柄 |
 | 7.7 | 内置圆角/阴影窗口 | 已 | 已 | 无边框 + `transparent` + 关掉系统 `hasShadow/roundedCorners`，圆角与阴影由 CSS 画（否则两层叠在一起） |
@@ -304,7 +304,21 @@ lx 实际拥有的能力 = 99 − 7（我们独有）= **92 项**。
 | 移动端首页 / 搜索 / 我的音乐仍是中文硬编码 | 底部 5 个 tab、首页 7 张卡与推荐、搜索占位/历史/热门/结果数、我的音乐入口/弹窗/批量删除/空态等首批高频文案接共享字典；未翻译项回退中文 | `App.tsx`、`HomeScreen / SearchScreen / MyMusicScreen / AccountScreen.tsx`；四个整体 core mock 用 `jest.requireActual` 合并真核 |
 | 默认中文回归不能破 | 默认 `zh-CN`，既有中文断言全部保留；`settings.languageNote` 说明未翻译文案暂用中文 | vitest 607 / jest 54 全绿 |
 
-本地验收：双端 `tsc --noEmit`、`vitest run`（51 passed / 13 skipped，607 passed / 22 skipped）、移动端 jest 14 suites / 54 tests、桌面 `vite build` 全绿。PWA 只读入口与逐页补齐剩余文案属下一阶段。
+本地验收：双端 `tsc --noEmit`、`vitest run`（51 passed / 13 skipped，607 passed / 22 skipped）、移动端 jest 14 suites / 54 tests、桌面 `vite build` 全绿。逐页补齐剩余页面内部文案属下一阶段。
+
+## 0.2.62 网页只读入口（PWA 试水，2026-11-15）
+
+| 反馈 / 目标 | 处理 | 落点 / 验收 |
+| --- | --- | --- |
+| 下载前没有可先看的网页入口 | 独立单页只读展示：能力说明、四语切换、下载 / 教程 / Release CTA；不登录、不播放、不写服务端 | `web/lyco-music-pwa/`，部署到 `https://lain42.top/lyco-music/` |
+| 网页版不能另起一套文案漂移 | 复用 `packages/core/src/i18n.ts` 的 `translate` / `translateFormat` / `LOCALES` 与 `toTraditional`；页面专属 33 个 `pwa.*` key 简 / 英 / 韩，繁体逐字转换 | `src/app.ts`、`src/copy.ts`；`data-i18n` 与 core key 全部可解析 |
+| 想「添加到主屏幕」离线看 | `manifest.webmanifest`（standalone + 192 / 512 / maskable 图标）与 `sw.js` 只缓存本页静态资源 | `manifest.webmanifest`、`sw.js`、`scripts/make-pwa-icons.py` |
+| 构建与产物要可复验 | esbuild 打包 + `scripts/check-lyco-pwa.py` 校验 7 个产物 / manifest / PNG / i18n / SW 标记；CI 加 Web PWA job | `scripts/build-lyco-pwa.mjs`、`scripts/check-lyco-pwa.py`、`.github/workflows/ci.yml` |
+| 站点要能找到入口 | 首页 hero / 常用入口 / 页脚与教程 hero / 第 16 节 / 页脚链入 | 远端 `index.html`、`docs/lyco-music.html` |
+
+本地验收：`node scripts/build-lyco-pwa.mjs` 产出 7 个产物、`python3 scripts/check-lyco-pwa.py .` 全绿、远端 `check-ui.py` 0 错 0 警、320 / 360 / 390px CDP 无横向溢出；CI 新增 Web PWA job。
+
+线上验收：`https://lain42.top/lyco-music/`、`index.html`、`app.js`、`sw.js`、`manifest.webmanifest` 与 3 个图标共 8 个 URL 均 200；pingap `lyco_pwa` 静态路由经 `--test` 后热加载，`/lyco-music/` 根请求会 rewrite 到 `index.html`，首页与教程入口保持 200。
 
 ## 工作量判断
 
