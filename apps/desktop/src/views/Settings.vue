@@ -415,7 +415,7 @@ const SKIN_DESC: Record<SkinId, string> = {
             </div>
             <p class="mt-0.5 truncate text-[11px] text-ncm-fainter" :title="s.origin">{{ s.origin || t('本地导入') }}</p>
             <p v-if="poolState(s.id)" class="mt-0.5 text-[11px]" :class="poolState(s.id)!.lastError ? 'text-red-500' : 'text-ncm-fainter'">
-              {{ poolState(s.id)!.lastError ? tf('取流失败：{err}', { err: poolState(s.id)!.lastError }) : tf('成功 {ok} · 失败 {fail}', { ok: poolState(s.id)!.ok, fail: poolState(s.id)!.fail }) }}
+              {{ poolState(s.id)!.lastError ? tf('取流失败：{err}', { err: poolState(s.id)!.lastError || t('未知错误') }) : tf('成功 {ok} · 失败 {fail}', { ok: poolState(s.id)!.ok, fail: poolState(s.id)!.fail }) }}
             </p>
           </div>
           <button
