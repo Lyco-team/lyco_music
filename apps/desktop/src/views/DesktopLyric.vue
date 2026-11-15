@@ -11,6 +11,7 @@
  * 数据来自主窗口：主进程转发 lxmn:lyric:data，这里只负责渲染与交互。
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { t as tr, tf } from '@/lib/i18n'
 import { findLineIndex, type LyricLine } from '@lxmn/core'
 import { viewLyric } from '@/lib/lyric-view'
 import {
@@ -415,7 +416,7 @@ async function resetWindow(): Promise<void> {
           ...paint,
         }"
       >
-        {{ data.name ? '等待歌词…' : 'Lyco Music 桌面歌词' }}
+        {{ data.name ? tr('等待歌词…') : 'Lyco Music ' + tr('桌面歌词') }}
       </p>
       <template v-else>
         <p
@@ -468,7 +469,7 @@ async function resetWindow(): Promise<void> {
       :aria-valuenow="Math.round(progressPct)"
       aria-valuemin="0"
       aria-valuemax="100"
-      aria-label="播放进度"
+      :aria-label="tr('播放进度')"
       @mousedown="onBarDown"
       @mousemove="onBarMove"
       @mouseup="onBarUp"
@@ -487,9 +488,9 @@ async function resetWindow(): Promise<void> {
       class="absolute right-2 top-2 flex items-center gap-1 rounded-lg bg-black/55 px-1.5 py-1 backdrop-blur"
       :style="{ WebkitAppRegion: 'no-drag' } as never"
     >
-      <button type="button" class="rounded px-1.5 text-[12px] text-white/85 hover:bg-white/15" title="锁定（锁定后鼠标穿透，到播放器底栏点「词」解锁）" @click="toggleLock">🔓</button>
-      <button type="button" class="rounded px-1.5 text-[12px] text-white/85 hover:bg-white/15" title="调小" @click="bump(-2)">A-</button>
-      <button type="button" class="rounded px-1.5 text-[12px] text-white/85 hover:bg-white/15" title="调大" @click="bump(2)">A+</button>
+      <button type="button" class="rounded px-1.5 text-[12px] text-white/85 hover:bg-white/15" :title="tr('锁定（锁定后鼠标穿透，到播放器底栏点「词」解锁）')" @click="toggleLock">🔓</button>
+      <button type="button" class="rounded px-1.5 text-[12px] text-white/85 hover:bg-white/15" :title="tr('调小')" @click="bump(-2)">A-</button>
+      <button type="button" class="rounded px-1.5 text-[12px] text-white/85 hover:bg-white/15" :title="tr('调大')" @click="bump(2)">A+</button>
       <span class="mx-0.5 h-3 w-px bg-white/25" aria-hidden="true" />
       <!-- 三层开关：原文 / 罗马音 / 翻译 -->
       <button
@@ -498,9 +499,9 @@ async function resetWindow(): Promise<void> {
         type="button"
         class="rounded px-1.5 text-[12px]"
         :class="layers[o.key] ? 'bg-white/20 text-white' : 'text-white/40 hover:bg-white/15'"
-        :title="(layers[o.key] ? '隐藏' : '显示') + o.label"
+        :title="(layers[o.key] ? tr('隐藏') : tr('显示')) + tr(o.label)"
         @click="toggleLayer(o.key)"
-      >{{ o.short }}</button>
+      >{{ tr(o.short) }}</button>
       <span class="mx-0.5 h-3 w-px bg-white/25" aria-hidden="true" />
       <button
         v-for="c in LYRIC_COLORS.slice(-6)"
@@ -508,12 +509,12 @@ async function resetWindow(): Promise<void> {
         type="button"
         class="size-3.5 rounded-full border border-white/40"
         :style="{ background: c }"
-        :title="'当前行颜色 ' + c"
+        :title="tf('当前行颜色 {c}', { c })"
         @click="patch({ playedColor: c })"
       />
       <span class="mx-0.5 h-3 w-px bg-white/25" aria-hidden="true" />
-      <button type="button" class="rounded px-1.5 text-[12px] text-white/85 hover:bg-white/15" title="右键打开更多样式" @click="showMenu">⋯</button>
-      <button type="button" class="rounded px-1.5 text-[12px] text-white/85 hover:bg-white/15" title="关闭桌面歌词" @click="close">×</button>
+      <button type="button" class="rounded px-1.5 text-[12px] text-white/85 hover:bg-white/15" :title="tr('右键打开更多样式')" @click="showMenu">⋯</button>
+      <button type="button" class="rounded px-1.5 text-[12px] text-white/85 hover:bg-white/15" :title="tr('关闭桌面歌词')" @click="close">×</button>
     </div>
 
     <!-- 样式面板（右键打开）：流内元素，窗口已按 MENU_RESERVE 加高，不会压住歌词 -->
@@ -525,20 +526,20 @@ async function resetWindow(): Promise<void> {
       @contextmenu.prevent
     >
       <div class="mb-1 flex items-center justify-between text-[11px] text-white/45">
-        <span>桌面歌词样式</span>
-        <button type="button" class="rounded px-1 text-white/60 hover:bg-white/15" title="关闭面板" @click="closeMenu">×</button>
+        <span>{{ tr('桌面歌词样式') }}</span>
+        <button type="button" class="rounded px-1 text-white/60 hover:bg-white/15" :title="tr('关闭面板')" @click="closeMenu">×</button>
       </div>
 
       <!-- 字号 -->
       <div class="flex h-[26px] items-center gap-1.5">
-        <span class="w-9 shrink-0 text-[11px] text-white/45">字号</span>
+        <span class="w-9 shrink-0 text-[11px] text-white/45">{{ tr('字号') }}</span>
         <button type="button" class="rounded bg-white/10 px-2 text-[12px] hover:bg-white/20" @click="bump(-2)">A-</button>
         <span class="w-7 text-center text-[12px] tabular-nums text-white/80">{{ style.fontSize }}</span>
         <button type="button" class="rounded bg-white/10 px-2 text-[12px] hover:bg-white/20" @click="bump(2)">A+</button>
-        <button type="button" class="ml-1 rounded px-2 text-[11px] text-white/55 hover:bg-white/15" @click="patch({ fontSize: DEFAULT_LYRIC_STYLE.fontSize })">重置</button>
+        <button type="button" class="ml-1 rounded px-2 text-[11px] text-white/55 hover:bg-white/15" @click="patch({ fontSize: DEFAULT_LYRIC_STYLE.fontSize })"> {{ tr('重置') }}</button>
 
         <span class="ml-auto flex items-center gap-1 text-[11px] text-white/45">
-          行数
+          {{ tr('行数') }}
           <button
             v-for="n in LINE_OPTIONS"
             :key="n"
@@ -547,32 +548,32 @@ async function resetWindow(): Promise<void> {
             :class="style.lines === n ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
             @click="patch({ lines: n })"
           >
-            {{ n === 1 ? '单行' : '双行' }}
+            {{ n === 1 ? tr('单行') : tr('双行') }}
           </button>
         </span>
       </div>
 
       <!-- 显示层：原文 / 罗马音 / 翻译 各自独立开关 -->
       <div class="mt-1 flex h-[26px] items-center gap-1.5">
-        <span class="w-9 shrink-0 text-[11px] text-white/45">显示</span>
+        <span class="w-9 shrink-0 text-[11px] text-white/45">{{ tr('显示') }}</span>
         <button
           v-for="o in LAYER_OPTIONS"
           :key="'l' + o.key"
           type="button"
           class="rounded px-2 text-[11px]"
           :class="layers[o.key] ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
-          :title="(layers[o.key] ? '隐藏' : '显示') + o.label"
+          :title="(layers[o.key] ? tr('隐藏') : tr('显示')) + tr(o.label)"
           @click="toggleLayer(o.key)"
         >
-          {{ o.label }}
+          {{ tr(o.label) }}
         </button>
-        <span class="ml-auto text-[11px] text-white/30">没这几层时多半是源没给</span>
+        <span class="ml-auto text-[11px] text-white/30">{{ tr('没这几层时多半是源没给') }}</span>
       </div>
 
       <!-- 颜色：当前行 / 下一行 -->
       <div class="mt-1 flex h-[26px] items-center gap-1.5">
-        <span class="w-9 shrink-0 text-[11px] text-white/45">颜色</span>
-        <span class="text-[11px] text-white/40">当前</span>
+        <span class="w-9 shrink-0 text-[11px] text-white/45">{{ tr('颜色') }}</span>
+        <span class="text-[11px] text-white/40">{{ tr('当前') }}</span>
         <button
           v-for="c in LYRIC_COLORS"
           :key="'p' + c"
@@ -583,7 +584,7 @@ async function resetWindow(): Promise<void> {
           :title="c"
           @click="patch({ playedColor: c })"
         />
-        <span class="ml-2 text-[11px] text-white/40">下一行</span>
+        <span class="ml-2 text-[11px] text-white/40">{{ tr('下一行') }}</span>
         <button
           v-for="c in LYRIC_COLORS"
           :key="'u' + c"
@@ -598,7 +599,7 @@ async function resetWindow(): Promise<void> {
 
       <!-- 字体 -->
       <div class="mt-1 flex h-[26px] items-center gap-1.5">
-        <span class="w-9 shrink-0 text-[11px] text-white/45">字体</span>
+        <span class="w-9 shrink-0 text-[11px] text-white/45">{{ tr('字体') }}</span>
         <button
           v-for="f in LYRIC_FONTS"
           :key="f.id"
@@ -608,53 +609,53 @@ async function resetWindow(): Promise<void> {
           :style="{ fontFamily: f.stack || undefined }"
           @click="patch({ fontFamily: f.stack })"
         >
-          {{ f.name }}
+          {{ tr(f.name) }}
         </button>
       </div>
 
       <!-- 排版：加粗 / 不换行 / 行距 / 竖排 / 停靠 -->
       <div class="mt-1 flex h-[26px] items-center gap-1.5">
-        <span class="w-9 shrink-0 text-[11px] text-white/45">排版</span>
+        <span class="w-9 shrink-0 text-[11px] text-white/45">{{ tr('排版') }}</span>
         <button
           type="button"
           class="rounded px-2 text-[11px]"
           :class="style.boldLines ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
-          title="歌词正文加粗"
+          :title="tr('歌词正文加粗')"
           @click="patch({ boldLines: !style.boldLines })"
-        >加粗</button>
+        > {{ tr('加粗') }}</button>
         <button
           type="button"
           class="rounded px-2 text-[11px]"
           :class="style.boldTranslation ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
-          title="翻译行加粗"
+          :title="tr('翻译行加粗')"
           @click="patch({ boldTranslation: !style.boldTranslation })"
-        >译粗</button>
+        > {{ tr('译粗') }}</button>
         <button
           type="button"
           class="rounded px-2 text-[11px]"
           :class="style.noWrap ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
-          title="超长歌词不折行，直接省略"
+          :title="tr('超长歌词不折行，直接省略')"
           @click="patch({ noWrap: !style.noWrap })"
-        >不换行</button>
+        > {{ tr('不换行') }}</button>
         <button
           type="button"
           class="rounded px-2 text-[11px]"
           :class="style.vertical ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
-          title="竖排显示（日式字幕）"
+          :title="tr('竖排显示（日式字幕）')"
           @click="patch({ vertical: !style.vertical })"
-        >竖排</button>
+        > {{ tr('竖排') }}</button>
         <button
           type="button"
           class="rounded px-2 text-[11px]"
           :class="style.showSpectrum ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
-          title="在歌词下方显示频谱（数据由主窗口的音频分析器推送）"
+          :title="tr('在歌词下方显示频谱（数据由主窗口的音频分析器推送）')"
           @click="patch({ showSpectrum: !style.showSpectrum })"
-        >频谱</button>
+        > {{ tr('频谱') }}</button>
       </div>
 
       <!-- 行距 / 停靠位置 -->
       <div class="mt-1 flex h-[26px] items-center gap-1.5">
-        <span class="w-9 shrink-0 text-[11px] text-white/45">行距</span>
+        <span class="w-9 shrink-0 text-[11px] text-white/45">{{ tr('行距') }}</span>
         <button
           v-for="lh in LINE_HEIGHTS"
           :key="lh"
@@ -663,7 +664,7 @@ async function resetWindow(): Promise<void> {
           :class="style.lineHeight === lh ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
           @click="patch({ lineHeight: lh })"
         >{{ lh.toFixed(1) }}</button>
-        <span class="ml-2 text-[11px] text-white/40">位置</span>
+        <span class="ml-2 text-[11px] text-white/40">{{ tr('位置') }}</span>
         <button
           v-for="d in DOCKS"
           :key="d.id"
@@ -671,44 +672,44 @@ async function resetWindow(): Promise<void> {
           class="rounded px-2 text-[11px]"
           :class="style.scrollAt === d.id ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
           @click="patch({ scrollAt: d.id })"
-        >{{ d.label }}</button>
+        >{{ tr(d.label) }}</button>
       </div>
 
       <!-- 行为：暂停变淡 / 任务栏 / 全屏隐藏 / 重置窗口 -->
       <div class="mt-1 flex h-[26px] items-center gap-1.5">
-        <span class="w-9 shrink-0 text-[11px] text-white/45">行为</span>
+        <span class="w-9 shrink-0 text-[11px] text-white/45">{{ tr('行为') }}</span>
         <button
           type="button"
           class="rounded px-2 text-[11px]"
           :class="style.dimWhenPaused ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
-          title="暂停时把歌词调淡，避免挡住桌面"
+          :title="tr('暂停时把歌词调淡，避免挡住桌面')"
           @click="patch({ dimWhenPaused: !style.dimWhenPaused })"
-        >暂停变淡</button>
+        > {{ tr('暂停变淡') }}</button>
         <button
           type="button"
           class="rounded px-2 text-[11px]"
           :class="style.showInTaskbar ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
-          title="在任务栏显示这个窗口（录屏抓不到歌词时用）"
+          :title="tr('在任务栏显示这个窗口（录屏抓不到歌词时用）')"
           @click="patch({ showInTaskbar: !style.showInTaskbar })"
-        >任务栏</button>
+        > {{ tr('任务栏') }}</button>
         <button
           type="button"
           class="rounded px-2 text-[11px]"
           :class="style.hideOnFullscreen ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
-          title="主窗口全屏时自动隐藏（只对 Lyco 自己的全屏生效）"
+          :title="tr('主窗口全屏时自动隐藏（只对 Lyco 自己的全屏生效）')"
           @click="patch({ hideOnFullscreen: !style.hideOnFullscreen })"
-        >全屏隐藏</button>
+        > {{ tr('全屏隐藏') }}</button>
         <button
           type="button"
           class="ml-auto rounded px-2 text-[11px] text-white/60 hover:bg-white/15"
-          title="窗口拖到屏幕外找不回来时点这里"
+          :title="tr('窗口拖到屏幕外找不回来时点这里')"
           @click="resetWindow"
-        >重置窗口</button>
+        > {{ tr('重置窗口') }}</button>
       </div>
 
       <!-- 描边 -->
       <div class="mt-1 flex h-[26px] items-center gap-1.5">
-        <span class="w-9 shrink-0 text-[11px] text-white/45">描边</span>
+        <span class="w-9 shrink-0 text-[11px] text-white/45">{{ tr('描边') }}</span>
         <button
           v-for="s in LYRIC_STROKES"
           :key="s.level"
@@ -717,9 +718,9 @@ async function resetWindow(): Promise<void> {
           :class="style.stroke === s.level ? 'bg-white/90 text-black' : 'bg-white/10 text-white/70 hover:bg-white/20'"
           @click="patch({ stroke: s.level })"
         >
-          {{ s.name }}
+          {{ tr(s.name) }}
         </button>
-        <span class="ml-auto text-[11px] text-white/30">右键可再打开 · 双击锁定</span>
+        <span class="ml-auto text-[11px] text-white/30">{{ tr('右键可再打开 · 双击锁定') }}</span>
       </div>
     </div>
 
@@ -729,7 +730,7 @@ async function resetWindow(): Promise<void> {
       class="absolute inset-x-0 bottom-1 text-center text-[10px] text-white/40"
       :style="{ WebkitAppRegion: 'no-drag' } as never"
     >
-      歌词已锁定 · 到播放器底栏点「词」解锁
+      {{ tr('歌词已锁定 · 到播放器底栏点「词」解锁') }}
     </div>
   </div>
 </template>

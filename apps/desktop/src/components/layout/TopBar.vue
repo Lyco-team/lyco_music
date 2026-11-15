@@ -59,10 +59,10 @@ function hideHistory(): void {
 }
 
 /** 主题菜单项：色块 + 名称；末尾附两套皮肤（材质不同，不只是颜色） */
-const themeItems = [
-  ...theme.presets.map(p => ({ value: p.id, label: p.name, hint: p.accent })),
-  ...theme.skins.map(s => ({ value: 'skin:' + s.id, label: '皮肤 · ' + s.name, hint: '' })),
-]
+const themeItems = computed(() => [
+  ...theme.presets.map(p => ({ value: p.id, label: t(p.name), hint: p.accent })),
+  ...theme.skins.map(s => ({ value: 'skin:' + s.id, label: t('皮肤 ·') + ' ' + t(s.name), hint: '' })),
+])
 
 function search(): void {
   const q = keyword.value.trim()
@@ -104,7 +104,7 @@ function onSearchKeydown(e: KeyboardEvent): void {
     <button
       type="button"
       class="flex size-10 shrink-0 items-center justify-center rounded-xl border border-ncm-divider text-ncm-faint transition-colors hover:bg-white hover:text-ncm-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ncm-accent [app-region:no-drag]"
-      aria-label="返回上一页"
+      :aria-label="t('返回上一页')"
       @click="router.back()"
     >
       <ChevronLeft :size="20" :stroke-width="1.8" aria-hidden="true" />
@@ -120,7 +120,7 @@ function onSearchKeydown(e: KeyboardEvent): void {
         type="search"
         :placeholder="t('topbar.search')"
         class="w-full min-w-0 bg-transparent text-[15px] text-ncm-fg outline-none placeholder:text-ncm-fainter"
-        aria-label="搜索歌曲或歌单"
+        :aria-label="t('搜索歌曲或歌单')"
         :aria-expanded="historyOpen && visibleHistory.length > 0"
         aria-controls="topbar-search-history"
         autocomplete="off"
@@ -135,16 +135,16 @@ function onSearchKeydown(e: KeyboardEvent): void {
         id="topbar-search-history"
         class="absolute left-0 right-0 top-[48px] z-50 max-h-[320px] overflow-y-auto rounded-xl border border-ncm-divider bg-white py-1 shadow-xl [app-region:no-drag]"
         role="listbox"
-        aria-label="搜索历史"
+        :aria-label="t('搜索历史')"
       >
         <div class="flex items-center justify-between px-3 py-1.5 text-[12px] text-ncm-faint">
-          <span>搜索历史</span>
+          <span>{{ t('搜索历史') }}</span>
           <button
             type="button"
             class="flex items-center gap-1 rounded px-1 py-0.5 transition-colors hover:text-ncm-accent"
-            aria-label="清空搜索历史"
+            :aria-label="t('清空搜索历史')"
             @click="clearHistory"
-          ><Trash2 :size="12" :stroke-width="1.8" aria-hidden="true" />清空</button>
+          ><Trash2 :size="12" :stroke-width="1.8" aria-hidden="true" />{{ t('清空') }}</button>
         </div>
         <div
           v-for="q in visibleHistory"
@@ -162,7 +162,7 @@ function onSearchKeydown(e: KeyboardEvent): void {
           <button
             type="button"
             class="shrink-0 rounded p-1 text-ncm-fainter opacity-0 transition-opacity hover:text-ncm-accent group-hover:opacity-100 focus:opacity-100"
-            :aria-label="'删除搜索历史：' + q"
+            :aria-label="t('删除搜索历史：') + q"
             @click.stop="deleteHistory(q)"
           ><X :size="12" :stroke-width="2" aria-hidden="true" /></button>
         </div>
@@ -172,9 +172,9 @@ function onSearchKeydown(e: KeyboardEvent): void {
     <button
       type="button"
       disabled
-      title="语音搜索暂未开放"
+      :title="t('语音搜索暂未开放')"
       class="flex size-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl border border-ncm-divider text-ncm-faint opacity-55 [app-region:no-drag]"
-      aria-label="语音搜索暂未开放"
+      :aria-label="t('语音搜索暂未开放')"
     >
       <Mic :size="20" :stroke-width="1.8" aria-hidden="true" />
     </button>
@@ -212,7 +212,7 @@ function onSearchKeydown(e: KeyboardEvent): void {
         <button
           type="button"
           class="flex size-9 shrink-0 items-center justify-center rounded-lg text-ncm-faint transition-colors hover:bg-black/5 hover:text-ncm-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ncm-accent [app-region:no-drag]"
-          :aria-label="'主题色：' + theme.current.value.name"
+          :aria-label="t('主题色：') + t(theme.current.value.name)"
           aria-haspopup="menu"
           :aria-expanded="open"
           @click="toggle"

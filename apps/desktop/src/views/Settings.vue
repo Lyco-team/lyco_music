@@ -18,7 +18,7 @@ import { sourcePool, syncScriptSources } from '@/lib/source-pool'
 import PrefsSettings from '@/components/settings/PrefsSettings.vue'
 import { useI18n } from '@/lib/i18n'
 
-const { t } = useI18n()
+const { t, tf } = useI18n()
 const tex = useTexture()
 const theme = useTheme()
 
@@ -56,14 +56,14 @@ async function saveDislikes(): Promise<void> {
   await setDislikeRules(dislikeDraft.value)
   dislikeDirty.value = false
   dislikeDraft.value = dislikes.value.join('\n')
-  toast(`已保存 ${dislikes.value.length} 条屏蔽规则`)
+  toast(tf('已保存 {n} 条屏蔽规则', { n: dislikes.value.length }))
 }
 
 async function wipeDislikes(): Promise<void> {
   await clearDislikes()
   dislikeDirty.value = false
   dislikeDraft.value = ''
-  toast('已清空屏蔽规则')
+  toast(t('已清空屏蔽规则'))
 }
 
 /* ---------------- 自定义音源（lx 脚本） ---------------- */
@@ -105,7 +105,7 @@ async function importSourceUrl(): Promise<void> {
     const s = await userSources.addFromUrl(sourceUrl.value)
     sourceUrl.value = ''
     await refreshPool()
-    sourceMsg.value = `已导入「${s.name}」`
+    sourceMsg.value = tf('已导入「{name}」', { name: s.name })
   } catch (e) {
     sourceErr.value = e instanceof Error ? e.message : String(e)
   } finally {
@@ -123,7 +123,7 @@ async function importSourceFile(e: Event): Promise<void> {
   try {
     const s = await userSources.addFromFile(file)
     await refreshPool()
-    sourceMsg.value = `已导入「${s.name}」`
+    sourceMsg.value = tf('已导入「{name}」', { name: s.name })
   } catch (err) {
     sourceErr.value = err instanceof Error ? err.message : String(err)
   } finally {
@@ -140,7 +140,7 @@ async function toggleSource(id: string): Promise<void> {
 async function removeSource(id: string): Promise<void> {
   userSources.remove(id)
   await refreshPool()
-  sourceMsg.value = '已删除，音源池已更新'
+  sourceMsg.value = t('已删除，音源池已更新')
 }
 
 const activeTexture = computed(() => tex.textures.find(t => t.id === tex.textureId.value) ?? tex.textures[0]!)
@@ -171,8 +171,8 @@ const SKIN_DESC: Record<SkinId, string> = {
     <div class="mb-7 flex items-center gap-3">
       <Sparkles :size="29" class="text-ncm-accent" />
       <div>
-        <h1 class="text-[28px] font-bold text-ncm-fg">设置</h1>
-        <p class="text-sm text-ncm-faint">外观与质感。默认就是我们认为最好看的那一档，改坏了随时能改回来。</p>
+        <h1 class="text-[28px] font-bold text-ncm-fg">{{ t('设置') }}</h1>
+        <p class="text-sm text-ncm-faint">{{ t('外观与质感。默认就是我们认为最好看的那一档，改坏了随时能改回来。') }}</p>
       </div>
     </div>
 
@@ -181,39 +181,39 @@ const SKIN_DESC: Record<SkinId, string> = {
       <div class="flex items-center gap-2">
         <Layers :size="19" class="text-ncm-accent" />
         <h2 class="text-lg font-semibold text-ncm-fg">{{ t('set.texture', '封面质感') }}</h2>
-        <span class="ml-auto rounded-full bg-ncm-accent/10 px-2.5 py-1 text-[11px] text-ncm-accent">默认：半调网点</span>
+        <span class="ml-auto rounded-full bg-ncm-accent/10 px-2.5 py-1 text-[11px] text-ncm-accent">{{ t('默认：半调网点') }}</span>
       </div>
       <p class="mt-2 text-sm text-ncm-faint">
-        只作用在<b class="text-ncm-muted">带封面的组件</b>上（专辑图、歌单封面、频道大图）。纯色面板和文字一律不碰 ——
-        整屏铺满会显脏，网点压在字上边缘会毛。
+        {{ t('只作用在') }}<b class="text-ncm-muted">{{ t('带封面的组件') }}</b>{{ t('上（专辑图、歌单封面、频道大图）。纯色面板和文字一律不碰 ——') }}
+        {{ t('整屏铺满会显脏，网点压在字上边缘会毛。') }}
       </p>
 
       <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         <button
-          v-for="t in tex.textures"
-          :key="t.id"
+          v-for="tx in tex.textures"
+          :key="tx.id"
           type="button"
           class="group rounded-xl border p-2 text-left transition-all"
-          :class="tex.textureId.value === t.id
+          :class="tex.textureId.value === tx.id
             ? 'border-ncm-accent bg-ncm-accent/5 ring-1 ring-ncm-accent/40'
             : 'border-ncm-divider hover:border-ncm-faint/50 hover:bg-ncm-bg'"
-          :title="t.desc"
-          @click="tex.setTexture(t.id)"
+          :title="t(tx.desc)"
+          @click="tex.setTexture(tx.id)"
         >
-          <div class="tex-preview h-[54px] w-full" :data-texture="t.id">
-            <span class="tex-img" :style="{ opacity: previewOpacity(t.id) }" />
+          <div class="tex-preview h-[54px] w-full" :data-texture="tx.id">
+            <span class="tex-img" :style="{ opacity: previewOpacity(tx.id) }" />
           </div>
           <div class="mt-2 flex items-center gap-1">
-            <span class="text-[13px] font-medium text-ncm-fg">{{ t.name }}</span>
-            <Check v-if="tex.textureId.value === t.id" :size="13" class="ml-auto text-ncm-accent" />
+            <span class="text-[13px] font-medium text-ncm-fg">{{ t(tx.name) }}</span>
+            <Check v-if="tex.textureId.value === tx.id" :size="13" class="ml-auto text-ncm-accent" />
           </div>
-          <p class="mt-0.5 line-clamp-2 text-[11px] leading-[15px] text-ncm-faint">{{ t.desc }}</p>
+          <p class="mt-0.5 line-clamp-2 text-[11px] leading-[15px] text-ncm-faint">{{ t(tx.desc) }}</p>
         </button>
       </div>
 
       <!-- 强度：同一张网点，4% 是高级，15% 就是脏 -->
       <div class="mt-6 flex items-center gap-3">
-        <span class="w-[64px] shrink-0 text-[13px] text-ncm-muted">强度</span>
+        <span class="w-[64px] shrink-0 text-[13px] text-ncm-muted">{{ t('强度') }}</span>
         <input
           type="range"
           min="0"
@@ -221,7 +221,7 @@ const SKIN_DESC: Record<SkinId, string> = {
           :value="tex.strength.value"
           :disabled="tex.textureId.value === 'none'"
           class="h-1 flex-1 accent-[var(--color-ncm-accent)] disabled:opacity-40"
-          aria-label="质感强度"
+          :aria-label="t('质感强度')"
           @input="tex.setStrength(Number(($event.target as HTMLInputElement).value))"
         />
         <span class="w-[42px] shrink-0 text-right text-[13px] tabular-nums text-ncm-fg">{{ tex.strength.value }}%</span>
@@ -231,11 +231,11 @@ const SKIN_DESC: Record<SkinId, string> = {
           :disabled="tex.textureId.value === 'none'"
           @click="tex.setStrength(activeTexture.strength)"
         >
-          恢复推荐
+          {{ t('恢复推荐') }}
         </button>
       </div>
       <p class="mt-2 text-[12px] text-ncm-faint">
-        建议 35%～70%。图片本身有明暗，比纯色面板更吃得住纹理；低于 20% 基本看不出来。
+        {{ t('建议 35%～70%。图片本身有明暗，比纯色面板更吃得住纹理；低于 20% 基本看不出来。') }}
       </p>
     </div>
 
@@ -245,7 +245,7 @@ const SKIN_DESC: Record<SkinId, string> = {
         <Layers :size="19" class="text-ncm-accent" />
         <h2 class="text-lg font-semibold text-ncm-fg">{{ t('set.skin', '皮肤') }}</h2>
       </div>
-      <p class="mt-2 text-sm text-ncm-faint">皮肤换的是材质（面板是否半透明、有没有毛玻璃），和下面的强调色互不影响。</p>
+      <p class="mt-2 text-sm text-ncm-faint">{{ t('皮肤换的是材质（面板是否半透明、有没有毛玻璃），和下面的强调色互不影响。') }}</p>
       <div class="mt-4 grid grid-cols-2 gap-3">
         <button
           v-for="s in SKINS"
@@ -258,10 +258,10 @@ const SKIN_DESC: Record<SkinId, string> = {
           @click="pickSkin(s.id)"
         >
           <div class="flex items-center gap-1.5">
-            <span class="text-[14px] font-medium text-ncm-fg">{{ s.name }}</span>
+            <span class="text-[14px] font-medium text-ncm-fg">{{ t(s.name) }}</span>
             <Check v-if="theme.skinId.value === s.id" :size="14" class="ml-auto text-ncm-accent" />
           </div>
-          <p class="mt-1 text-[12px] leading-[17px] text-ncm-faint">{{ SKIN_DESC[s.id] }}</p>
+          <p class="mt-1 text-[12px] leading-[17px] text-ncm-faint">{{ t(SKIN_DESC[s.id]) }}</p>
         </button>
       </div>
     </div>
@@ -272,7 +272,7 @@ const SKIN_DESC: Record<SkinId, string> = {
         <Palette :size="19" class="text-ncm-accent" />
         <h2 class="text-lg font-semibold text-ncm-fg">{{ t('set.accent', '强调色') }}</h2>
       </div>
-      <p class="mt-2 text-sm text-ncm-faint">只换选中态/进度条这类强调色，结构色不动，所以任何配色下对比度都是可预期的。</p>
+      <p class="mt-2 text-sm text-ncm-faint">{{ t('只换选中态/进度条这类强调色，结构色不动，所以任何配色下对比度都是可预期的。') }}</p>
       <div class="mt-4 flex flex-wrap items-center gap-3">
         <button
           v-for="p in theme.presets"
@@ -283,7 +283,7 @@ const SKIN_DESC: Record<SkinId, string> = {
           @click="theme.setTheme(p.id)"
         >
           <span class="size-4 rounded-full" :style="{ background: p.accent }" />
-          <span class="text-[13px] text-ncm-muted">{{ p.name }}</span>
+          <span class="text-[13px] text-ncm-muted">{{ t(p.name) }}</span>
           <Check v-if="theme.currentId.value === p.id" :size="13" class="text-ncm-accent" />
         </button>
       </div>
@@ -291,12 +291,12 @@ const SKIN_DESC: Record<SkinId, string> = {
       <!-- 自定义主色（7.2）：只让改主色，进度条/次级色自动推导 -->
       <div class="mt-4 flex flex-wrap items-center gap-3 border-t border-ncm-divider pt-4">
         <label class="flex items-center gap-2 text-[13px] text-ncm-muted">
-          <span>自定义</span>
+          <span>{{ t('自定义') }}</span>
           <input
             :value="customColor"
             type="color"
             class="h-7 w-10 cursor-pointer rounded border border-ncm-divider bg-white p-0.5"
-            aria-label="自定义强调色"
+            :aria-label="t('自定义强调色')"
             @input="onPickColor"
           />
         </label>
@@ -306,8 +306,8 @@ const SKIN_DESC: Record<SkinId, string> = {
           type="button"
           class="rounded-full px-3 py-1 text-[12px] transition-colors"
           :class="'bg-ncm-accent/10 text-ncm-accent'"
-        >正在使用</button>
-        <span class="text-[12px] text-ncm-faint">进度条与次级强调色按主色自动混白，保证有层次</span>
+        >{{ t('正在使用') }}</button>
+        <span class="text-[12px] text-ncm-faint">{{ t('进度条与次级强调色按主色自动混白，保证有层次') }}</span>
       </div>
     </div>
 
@@ -316,21 +316,21 @@ const SKIN_DESC: Record<SkinId, string> = {
       <div class="flex items-center gap-2">
         <ThumbsDown :size="19" class="text-ncm-accent" aria-hidden="true" />
         <h2 class="text-lg font-semibold text-ncm-fg">{{ t('set.dislike', '不喜欢的歌曲') }}</h2>
-        <span class="ml-1 text-[12px] text-ncm-faint">{{ dislikes.length }} 条规则</span>
+        <span class="ml-1 text-[12px] text-ncm-faint">{{ tf('{n} 条规则', { n: dislikes.length }) }}</span>
       </div>
       <p class="mt-2 text-sm text-ncm-faint">
-        命中的歌在随机/顺序播放时会被自动跳过，也不参与推荐。规则与 lx-music 完全兼容，可以从它那儿直接粘过来。
+        {{ t('命中的歌在随机/顺序播放时会被自动跳过，也不参与推荐。规则与 lx-music 完全兼容，可以从它那儿直接粘过来。') }}
       </p>
       <ul class="mt-3 space-y-1 text-[12px] text-ncm-muted">
-        <li><code class="rounded bg-ncm-bg px-1.5 py-0.5">歌名@艺术家</code> 只屏蔽这一首；歌名里本来有 @ 就写 #</li>
-        <li><code class="rounded bg-ncm-bg px-1.5 py-0.5">歌名</code> 屏蔽所有同名的歌（翻唱也会中）</li>
-        <li><code class="rounded bg-ncm-bg px-1.5 py-0.5">@艺术家</code> 屏蔽这个人的全部作品（合唱不匹配，见下方说明）</li>
+        <li><code class="rounded bg-ncm-bg px-1.5 py-0.5">{{ t('歌名@艺术家') }}</code> {{ t('只屏蔽这一首；歌名里本来有 @ 就写 #') }}</li>
+        <li><code class="rounded bg-ncm-bg px-1.5 py-0.5">{{ t('歌名') }}</code> {{ t('屏蔽所有同名的歌（翻唱也会中）') }}</li>
+        <li><code class="rounded bg-ncm-bg px-1.5 py-0.5">{{ t('@艺术家') }}</code> {{ t('屏蔽这个人的全部作品（合唱不匹配，见下方说明）') }}</li>
       </ul>
       <textarea
         v-model="dislikeDraft"
         rows="6"
         spellcheck="false"
-        placeholder="例如：&#10;晴天@周杰伦&#10;@某位不想再听到的歌手"
+        :placeholder="t('set.dislikePlaceholder')"
         class="mt-4 w-full resize-y rounded-xl border border-ncm-divider bg-ncm-bg px-3 py-2.5 font-mono text-[13px] leading-[21px] text-ncm-fg outline-none focus:border-ncm-accent"
         @input="dislikeDirty = true"
       />
@@ -340,17 +340,17 @@ const SKIN_DESC: Record<SkinId, string> = {
           class="rounded-full bg-ncm-accent px-4 py-1.5 text-[13px] text-white transition-opacity hover:opacity-90 disabled:opacity-40"
           :disabled="!dislikeDirty"
           @click="saveDislikes"
-        >保存规则</button>
+        >{{ t('保存规则') }}</button>
         <button
           type="button"
           class="rounded-full border border-ncm-divider px-4 py-1.5 text-[13px] text-ncm-muted hover:bg-ncm-bg disabled:opacity-40"
           :disabled="!dislikes.length && !dislikeDraft.trim()"
           @click="wipeDislikes"
-        >清空</button>
-        <span v-if="dislikeDirty" class="text-[12px] text-ncm-faint">有未保存的修改</span>
+        >{{ t('清空') }}</button>
+        <span v-if="dislikeDirty" class="text-[12px] text-ncm-faint">{{ t('有未保存的修改') }}</span>
       </div>
       <p class="mt-3 text-[12px] leading-[18px] text-ncm-faint">
-        整串比对，不做分词：singer 是「周杰伦/费玉清」时，规则写「千里之外@周杰伦」不会命中，要写「千里之外」或「@费玉清」。
+        {{ t('整串比对，不做分词：singer 是「周杰伦/费玉清」时，规则写「千里之外@周杰伦」不会命中，要写「千里之外」或「@费玉清」。') }}
       </p>
     </div>
 
@@ -360,14 +360,14 @@ const SKIN_DESC: Record<SkinId, string> = {
         <FileCode2 :size="19" class="text-ncm-accent" aria-hidden="true" />
         <h2 class="text-lg font-semibold text-ncm-fg">{{ t('set.sources', '自定义音源') }}</h2>
         <span class="ml-1 text-[12px] text-ncm-faint">
-          已导入 {{ userSources.list.value.length }} 个 · 启用 {{ userSources.enabledCount.value }} 个
+          {{ tf('已导入 {n} 个 · 启用 {m} 个', { n: userSources.list.value.length, m: userSources.enabledCount.value }) }}
         </span>
       </div>
       <p class="mt-2 text-sm text-ncm-faint">
-        支持 lx-music 的音源脚本（.js）。导入后与内置源、会员订阅源一起参与串源，取不到流时自动换下一个。
+        {{ t('支持 lx-music 的音源脚本（.js）。导入后与内置源、会员订阅源一起参与串源，取不到流时自动换下一个。') }}
       </p>
       <p class="mt-1 text-[12px] leading-[18px] text-ncm-faint">
-        脚本会在沙箱里执行 —— 导入第三方脚本相当于信任作者，请只导入你信得过的来源。
+        {{ t('脚本会在沙箱里执行 —— 导入第三方脚本相当于信任作者，请只导入你信得过的来源。') }}
       </p>
 
       <div class="mt-4 flex flex-wrap items-center gap-2">
@@ -375,7 +375,7 @@ const SKIN_DESC: Record<SkinId, string> = {
           v-model="sourceUrl"
           type="url"
           spellcheck="false"
-          placeholder="脚本地址，https://…/xxx.js"
+          :placeholder="t('脚本地址，https://…/xxx.js')"
           class="min-w-[280px] flex-1 rounded-[8px] border border-ncm-divider bg-ncm-bg px-3 py-1.5 text-[13px] text-ncm-fg outline-none placeholder:text-ncm-fainter focus:border-ncm-accent"
           @keydown.enter.prevent="importSourceUrl"
         />
@@ -384,13 +384,13 @@ const SKIN_DESC: Record<SkinId, string> = {
           class="rounded-full bg-ncm-accent px-4 py-1.5 text-[13px] text-white transition-opacity hover:opacity-90 disabled:opacity-40"
           :disabled="sourceBusy || !sourceUrl.trim()"
           @click="importSourceUrl"
-        >{{ sourceBusy ? '导入中…' : '从链接导入' }}</button>
+        >{{ sourceBusy ? t('导入中…') : t('从链接导入') }}</button>
         <button
           type="button"
           class="rounded-full border border-ncm-divider px-4 py-1.5 text-[13px] text-ncm-muted hover:bg-ncm-bg disabled:opacity-40"
           :disabled="sourceBusy"
           @click="fileInput?.click()"
-        >导入本地文件</button>
+        >{{ t('导入本地文件') }}</button>
         <input ref="fileInput" type="file" accept=".js,text/javascript" class="hidden" @change="importSourceFile" />
       </div>
 
@@ -406,33 +406,33 @@ const SKIN_DESC: Record<SkinId, string> = {
           <span
             class="size-[8px] shrink-0 rounded-full"
             :class="s.enabled ? 'bg-emerald-500' : 'bg-ncm-fainter'"
-            :title="s.enabled ? '已启用' : '已停用'"
+            :title="s.enabled ? t('已启用') : t('已停用')"
           />
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
               <span class="truncate text-[13px] text-ncm-fg">{{ s.name }}</span>
               <span v-if="s.version" class="shrink-0 rounded-[3px] border border-ncm-divider px-1 text-[11px] text-ncm-faint">v{{ s.version }}</span>
             </div>
-            <p class="mt-0.5 truncate text-[11px] text-ncm-fainter" :title="s.origin">{{ s.origin || '本地导入' }}</p>
+            <p class="mt-0.5 truncate text-[11px] text-ncm-fainter" :title="s.origin">{{ s.origin || t('本地导入') }}</p>
             <p v-if="poolState(s.id)" class="mt-0.5 text-[11px]" :class="poolState(s.id)!.lastError ? 'text-red-500' : 'text-ncm-fainter'">
-              {{ poolState(s.id)!.lastError ? '取流失败：' + poolState(s.id)!.lastError : `成功 ${poolState(s.id)!.ok} · 失败 ${poolState(s.id)!.fail}` }}
+              {{ poolState(s.id)!.lastError ? tf('取流失败：{err}', { err: poolState(s.id)!.lastError }) : tf('成功 {ok} · 失败 {fail}', { ok: poolState(s.id)!.ok, fail: poolState(s.id)!.fail }) }}
             </p>
           </div>
           <button
             type="button"
             class="shrink-0 rounded-full border border-ncm-divider px-3 py-1 text-[12px] text-ncm-muted hover:bg-ncm-bg"
             @click="toggleSource(s.id)"
-          >{{ s.enabled ? '停用' : '启用' }}</button>
+          >{{ s.enabled ? t('停用') : t('启用') }}</button>
           <button
             type="button"
             class="shrink-0 rounded-full p-1.5 text-ncm-faint transition-colors hover:bg-black/5 hover:text-red-500"
-            title="删除这个音源"
+            :title="t('删除这个音源')"
             @click="removeSource(s.id)"
           ><Trash2 :size="15" aria-hidden="true" /></button>
         </li>
       </ul>
       <p v-else class="mt-4 rounded-xl border border-dashed border-ncm-divider px-4 py-6 text-center text-[13px] text-ncm-fainter">
-        还没有导入音源。lx-music 的脚本可以直接粘链接或用文件导入。
+        {{ t('还没有导入音源。lx-music 的脚本可以直接粘链接或用文件导入。') }}
       </p>
     </div>
 
@@ -440,7 +440,7 @@ const SKIN_DESC: Record<SkinId, string> = {
     <PrefsSettings />
 
     <p class="mt-6 text-center text-[12px] text-ncm-faint">
-      桌面歌词的字号/颜色/显示层在歌词窗口里右键调整；显示层也可以直接在悬停工具条上点「原 / 罗 / 译」。
+      {{ t('桌面歌词的字号/颜色/显示层在歌词窗口里右键调整；显示层也可以直接在悬停工具条上点「原 / 罗 / 译」。') }}
     </p>
   </section>
 </template>
