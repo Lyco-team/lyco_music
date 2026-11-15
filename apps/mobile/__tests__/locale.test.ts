@@ -34,3 +34,18 @@ describe('mobile locale helper', () => {
     expect(isLocale('zh-TW')).toBe(true)
   })
 })
+
+describe('mobile page copy keys (batch 2)', () => {
+  afterEach(async () => { await setLocale('zh-CN') })
+
+  it('播放器 / 发现页 / 迷你条文案随语言切换', async () => {
+    expect(tf('mobile.player.queueTitle', { n: 2 })).toBe('播放列表（2）')
+    expect(t('mobile.discover.tabPlaylists')).toBe('歌单搜索')
+    await setLocale('en-US')
+    expect(tf('mobile.player.queueTitle', { n: 2 })).toBe('Play queue (2)')
+    expect(t('mobile.discover.tabPlaylists')).toBe('Playlist search')
+    expect(t('mobile.mini.toggle')).toBe('Mini player play/pause')
+    await setLocale('ko-KR')
+    expect(t('mobile.mini.toggle')).toBe('미니 플레이어 재생/일시정지')
+  })
+})

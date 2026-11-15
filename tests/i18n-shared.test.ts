@@ -49,3 +49,35 @@ describe('shared i18n dictionary (core)', () => {
     }
   })
 })
+
+describe('mobile page copy (shared dictionary, batch 2)', () => {
+  const NEW_KEYS = [
+    'mobile.player.queueTitle', 'mobile.player.sleepMinutesLabel', 'mobile.player.speedHint',
+    'mobile.discover.savedPlaylist', 'mobile.playlist.creatorOnly', 'mobile.playlist.placeholder',
+    'mobile.friends.needVipDesc', 'mobile.friends.shareMeta', 'mobile.member.errorOpenBrowser',
+    'mobile.member.unavailable', 'mobile.sync.merged', 'mobile.sync.rule1',
+    'mobile.mini.toggle', 'mobile.error.showDetail',
+  ]
+
+  it('第二批移动端 key 四语都非空且不是 key 本身', () => {
+    for (const key of NEW_KEYS) {
+      expect(TRANSLATION_KEYS).toContain(key)
+      for (const loc of LOCALES) {
+        const value = translate(key, loc)
+        expect(value, key + ' / ' + loc).toBeTruthy()
+        expect(value, key + ' / ' + loc).not.toBe(key)
+      }
+    }
+  })
+
+  it('页面文案插值在四语下都替换掉占位符', () => {
+    for (const loc of LOCALES) {
+      expect(translateFormat('mobile.player.queueTitle', loc, { n: 3 })).not.toContain('{n}')
+      const s = translateFormat('mobile.discover.savedPlaylist', loc, { name: 'X', n: 2 })
+      expect(s, loc).toContain('X')
+      expect(s, loc).toContain('2')
+      expect(s, loc).not.toContain('{name}')
+      expect(s, loc).not.toContain('{n}')
+    }
+  })
+})

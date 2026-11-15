@@ -15,6 +15,7 @@ import {
 } from '../sync'
 import { useMembership } from '../license'
 import { colors, useTopInset } from '../theme'
+import { t as tr, tf, useLocale } from '../lib/i18n'
 
 interface Counts {
   favorites: number
@@ -24,6 +25,7 @@ interface Counts {
 
 export default function SyncScreen({ onBack }: { onBack?: () => void }) {
   const insetTop = useTopInset()
+  useLocale()
   const [counts, setCounts] = useState<Counts>({ favorites: 0, playlists: 0, history: 0 })
   const [configured, setConfigured] = useState(false)
   const [mask, setMask] = useState('')
@@ -70,10 +72,10 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
     switch (r.state) {
       case 'ok':
         setSyncedAt(Date.now())
-        setMessage(r.pushed ? '已上传本机改动' : '已是最新')
+        setMessage(r.pushed ? tr('mobile.sync.pushed') : tr('mobile.sync.upToDate'))
         return true
       case 'conflict':
-        setMessage('另一台设备也在改，已合并，稍后再同步一次即可')
+        setMessage(tr('mobile.sync.merged'))
         return true
       case 'disabled':
         setConfigured(false)
@@ -130,11 +132,11 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
     await disconnectSync()
     setConfigured(false)
     setMask('')
-    setMessage('已关闭云同步（本地收藏保留）')
+    setMessage(tr('mobile.sync.disconnected'))
   }
 
   function fmtTime(ms: number): string {
-    if (!ms) return '从未'
+    if (!ms) return tr('mobile.sync.never')
     const d = new Date(ms)
     const p = (n: number) => String(n).padStart(2, '0')
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`
@@ -150,19 +152,19 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 32 }}>
         {onBack ? (
           <Pressable onPress={onBack} hitSlop={10} style={{ marginBottom: 12 }}>
-            <Text style={{ color: colors.muted, fontSize: 13.5 }}>‹ 返回</Text>
+            <Text style={{ color: colors.muted, fontSize: 13.5 }}>{tr('mobile.acct.back')}</Text>
           </Pressable>
         ) : null}
-        <Text style={{ color: colors.fg, fontSize: 24, fontWeight: '700', marginBottom: 6 }}>云同步</Text>
+        <Text style={{ color: colors.fg, fontSize: 24, fontWeight: '700', marginBottom: 6 }}>{tr('nav.sync')}</Text>
         <Text style={{ color: colors.muted, fontSize: 13, marginBottom: 20 }}>
-          收藏、歌单、播放记录在桌面端与移动端之间自动同步
+          {tr('mobile.sync.subtitle')}
         </Text>
 
         {/* 服务器 + 状态 */}
         <View style={card}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <View style={{ flex: 1 }}>
-              <Text style={{ color: colors.fg, fontSize: 16, fontWeight: '600' }}>同步服务器</Text>
+              <Text style={{ color: colors.fg, fontSize: 16, fontWeight: '600' }}>{tr('sync.server')}</Text>
               <Text style={{ color: colors.muted, fontSize: 13, marginTop: 4 }}>{syncServer}</Text>
             </View>
             <View style={{
@@ -170,13 +172,13 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
               backgroundColor: configured ? '#1d3324' : colors.elevated,
             }}>
               <Text style={{ color: configured ? '#6ede8a' : colors.muted, fontSize: 12 }}>
-                {configured ? '已开通' : '未开通'}
+                {configured ? tr('mobile.sync.enabled') : tr('mobile.sync.disabled')}
               </Text>
             </View>
           </View>
 
           <Text style={{ color: colors.fainter, fontSize: 12, marginTop: 14, lineHeight: 18 }}>
-            默认使用官方服务器，无需配置。会员身份即同步身份 —— 激活会员后自动开通。
+            {tr('mobile.sync.serverHint')}
           </Text>
 
           {!configured ? (
@@ -191,20 +193,20 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
                   }}
                 >
                   {busy ? <ActivityIndicator color="#fff" /> : (
-                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>用会员订阅一键开通</Text>
+                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>{tr('sync.oneClick')}</Text>
                   )}
                 </Pressable>
               ) : (
                 <View style={{ marginTop: 16, backgroundColor: colors.bg, borderRadius: 12, padding: 14 }}>
                   <Text style={{ color: colors.muted, fontSize: 13, lineHeight: 19 }}>
-                    还没开通会员。同步使用会员令牌，请先到「会员」页激活订阅链接。
+                    {tr('mobile.sync.needMember')}
                   </Text>
                 </View>
               )}
 
               <Pressable onPress={() => setShowCustom(v => !v)} style={{ marginTop: 12, paddingVertical: 6 }}>
                 <Text style={{ color: colors.fainter, fontSize: 13 }}>
-                  {showCustom ? '收起自建服务器' : '使用自建同步服务器'}
+                  {showCustom ? tr('mobile.sync.hideCustom') : tr('mobile.sync.showCustom')}
                 </Text>
               </Pressable>
 
@@ -213,7 +215,7 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
                   <TextInput
                     value={base}
                     onChangeText={setBase}
-                    placeholder="服务器地址，如 https://sync.example.com/studio"
+                    placeholder={tr('mobile.sync.serverPlaceholder')}
                     placeholderTextColor={colors.fainter}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -226,7 +228,7 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
                   <TextInput
                     value={token}
                     onChangeText={setToken}
-                    placeholder="同步令牌"
+                    placeholder={tr('sync.token')}
                     placeholderTextColor={colors.fainter}
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -244,7 +246,7 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
                       alignItems: 'center', borderWidth: 1, borderColor: '#3a3a3a',
                     }}
                   >
-                    <Text style={{ color: colors.fg, fontSize: 15 }}>连接</Text>
+                    <Text style={{ color: colors.fg, fontSize: 15 }}>{tr('sync.connect')}</Text>
                   </Pressable>
                 </>
               ) : null}
@@ -256,11 +258,11 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
                 padding: 16, flexDirection: 'row', alignItems: 'center',
               }}>
                 <View>
-                  <Text style={{ color: colors.muted, fontSize: 12 }}>同步令牌</Text>
+                  <Text style={{ color: colors.muted, fontSize: 12 }}>{tr('sync.token')}</Text>
                   <Text style={{ color: colors.fg, fontSize: 14, marginTop: 4 }}>{mask || '—'}</Text>
                 </View>
                 <View style={{ marginLeft: 'auto', alignItems: 'flex-end' }}>
-                  <Text style={{ color: colors.muted, fontSize: 12 }}>上次同步</Text>
+                  <Text style={{ color: colors.muted, fontSize: 12 }}>{tr('sync.lastSync')}</Text>
                   <Text style={{ color: colors.fg, fontSize: 14, marginTop: 4 }}>{fmtTime(syncedAt)}</Text>
                 </View>
               </View>
@@ -275,7 +277,7 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
                   }}
                 >
                   {busy ? <ActivityIndicator color="#fff" /> : (
-                    <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>立即同步</Text>
+                    <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>{tr('mobile.sync.syncNow')}</Text>
                   )}
                 </Pressable>
                 <Pressable
@@ -286,7 +288,7 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
                     alignItems: 'center', borderWidth: 1, borderColor: '#3a3a3a',
                   }}
                 >
-                  <Text style={{ color: colors.fg, fontSize: 15 }}>关闭同步</Text>
+                  <Text style={{ color: colors.fg, fontSize: 15 }}>{tr('sync.disable')}</Text>
                 </Pressable>
               </View>
             </>
@@ -299,9 +301,9 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
         {/* 本地数据概览 */}
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 16 }}>
           {([
-            ['我喜欢的', counts.favorites],
-            ['歌单', counts.playlists],
-            ['最近播放', counts.history],
+            [tr('mobile.sync.fav'), counts.favorites],
+            [tr('mobile.sync.playlists'), counts.playlists],
+            [tr('my.recent'), counts.history],
           ] as const).map(([label, n]) => (
             <View key={label} style={[card, { flex: 1, padding: 16 }]}>
               <Text style={{ color: colors.fg, fontSize: 22, fontWeight: '700' }}>{n}</Text>
@@ -312,11 +314,11 @@ export default function SyncScreen({ onBack }: { onBack?: () => void }) {
 
         {/* 冲突策略说明 */}
         <View style={[card, { marginTop: 16 }]}>
-          <Text style={{ color: colors.fg, fontSize: 15, fontWeight: '600' }}>冲突是怎么处理的</Text>
+          <Text style={{ color: colors.fg, fontSize: 15, fontWeight: '600' }}>{tr('mobile.sync.conflicts')}</Text>
           {[
-            '收藏、歌单取并集 —— 任何一台设备上收藏过的歌都不会丢',
-            '播放次数取两边较大的值，不会因为同步而翻倍',
-            '歌单里歌曲的顺序以最近修改的那台设备为准，不重排',
+            tr('mobile.sync.rule1'),
+            tr('mobile.sync.rule2'),
+            tr('mobile.sync.rule3'),
           ].map(t => (
             <View key={t} style={{ flexDirection: 'row', gap: 10, marginTop: 10 }}>
               <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.accent, marginTop: 6 }} />

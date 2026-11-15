@@ -20,6 +20,7 @@ import {
   type WyPlaylistBrief, type WyPlaylistMatch,
 } from '@lxmn/core'
 import { colors } from '../theme'
+import { t as tr, tf, useLocale, getLocale } from '../lib/i18n'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const DEFAULT_COVER = require('../assets/art/cover-default.jpg') as number
@@ -27,13 +28,17 @@ const DEFAULT_COVER = require('../assets/art/cover-default.jpg') as number
 type Filter = 'all' | WyPlaylistMatch
 
 const MATCH_LABEL: Record<WyPlaylistMatch, string> = {
-  name: '歌单名', creator: '创建者', other: '相关推荐',
+  name: 'mobile.playlist.matchName',
+  creator: 'mobile.playlist.matchCreator',
+  other: 'mobile.playlist.matchOther',
 }
 
 function fmtPlayCount(n: number): string {
   if (!Number.isFinite(n) || n <= 0) return ''
-  if (n >= 1e8) return (n / 1e8).toFixed(1) + '亿'
-  if (n >= 1e4) return Math.round(n / 1e4) + '万'
+  // 亿/万 与 M/K 的量级不同：英文按百万/千取整数，中日韩按亿/万缩放
+  const en = getLocale() === 'en-US'
+  if (n >= 1e8) return tf('mobile.playlist.billion', { n: en ? Math.round(n / 1e6) : (n / 1e8).toFixed(1) })
+  if (n >= 1e4) return tf('mobile.playlist.tenThousand', { n: en ? Math.round(n / 1e3) : Math.round(n / 1e4) })
   return String(n)
 }
 
@@ -62,6 +67,7 @@ export default function PlaylistResults({
   onOpen: (id: string, name: string, cover: string) => void
 }) {
   const [input, setInput] = useState(seed)
+  useLocale()
   const [playlists, setPlaylists] = useState<WyPlaylistBrief[]>([])
   const [total, setTotal] = useState(0)
   const [busy, setBusy] = useState(false)
@@ -152,10 +158,10 @@ export default function PlaylistResults({
   )
 
   const tabs: { id: Filter; label: string; count: number }[] = [
-    { id: 'all', label: '全部', count: counts.all },
-    { id: 'name', label: '歌单名', count: counts.name },
-    { id: 'creator', label: '创建者', count: counts.creator },
-    { id: 'other', label: '相关推荐', count: counts.other },
+    { id: 'all', label: tr('search.all'), count: counts.all },
+    { id: 'name', label: tr('mobile.playlist.matchName'), count: counts.name },
+    { id: 'creator', label: tr('mobile.playlist.matchCreator'), count: counts.creator },
+    { id: 'other', label: tr('mobile.playlist.matchOther'), count: counts.other },
   ]
 
   return (
@@ -169,7 +175,7 @@ export default function PlaylistResults({
           <TextInput
             value={input}
             onChangeText={setInput}
-            placeholder="搜歌单，例如「通勤」「爵士」"
+            placeholder={tr('mobile.playlist.placeholder')}
             placeholderTextColor={colors.fainter}
             autoCapitalize="none"
             autoCorrect={false}
@@ -189,7 +195,7 @@ export default function PlaylistResults({
               opacity: busy || !input.trim() ? 0.4 : 1,
             }}
           >
-            <Text style={{ color: '#fff', fontSize: 13 }}>{busy ? '搜索中…' : '搜索'}</Text>
+            <Text style={{ color: '#fff', fontSize: 13 }}>{busy ? tr('search.loading') : tr('tab.search')}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -200,13 +206,13 @@ export default function PlaylistResults({
 
       {searched && !busy && !playlists.length && !error ? (
         <Text style={{ color: colors.fainter, fontSize: 13, paddingHorizontal: 20, paddingTop: 18 }}>
-          没有找到相关歌单
+          {tr('mobile.playlist.empty')}
         </Text>
       ) : null}
 
       {!searched ? (
         <Text style={{ color: colors.fainter, fontSize: 13, paddingHorizontal: 20, paddingTop: 18, lineHeight: 19 }}>
-          搜的是歌单（不是单曲）。网易云会同时匹配歌单名和创建者昵称，结果会按命中位置分类。
+          {tr('mobile.playlist.hint')}
         </Text>
       ) : null}
 
@@ -243,24 +249,24 @@ export default function PlaylistResults({
             {creatorOnly ? (
               <>
                 <Text style={{ color: colors.accent, fontSize: 12, flex: 1 }}>
-                  只看创建者「{creatorName}」：共 {total} 张自建歌单（已排除 TA 收藏的别人的歌单）
+                  {tf('mobile.playlist.creatorOnly', { name: creatorName, total })}
                 </Text>
                 <Pressable onPress={backToKeyword} hitSlop={8}
                   style={{ borderWidth: 1, borderColor: colors.divider, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}>
-                  <Text style={{ color: colors.muted, fontSize: 12 }}>返回关键词搜索</Text>
+                  <Text style={{ color: colors.muted, fontSize: 12 }}>{tr('mobile.playlist.backToKeyword')}</Text>
                 </Pressable>
               </>
             ) : (
               <Pressable onPress={() => void onlyCreator(withInput ? input : keyword)} hitSlop={8}
                 style={{ borderWidth: 1, borderColor: colors.divider, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}>
-                <Text style={{ color: colors.muted, fontSize: 12 }}>只看同名创建者</Text>
+                <Text style={{ color: colors.muted, fontSize: 12 }}>{tr('mobile.playlist.onlySameCreator')}</Text>
               </Pressable>
             )}
           </View>
 
           {creatorOnly ? null : (
             <Text style={{ color: colors.fainter, fontSize: 12, marginBottom: 10, paddingHorizontal: 20 }}>
-              共 {total} 个歌单，显示前 {playlists.length} 个
+              {tf('mobile.playlist.totalShown', { total, n: playlists.length })}
             </Text>
           )}
 
@@ -275,7 +281,7 @@ export default function PlaylistResults({
                     {p.name}
                   </Text>
                   <Text numberOfLines={1} style={{ color: colors.fainter, fontSize: 11, marginTop: 2 }}>
-                    {p.trackCount} 首 · {p.creator}
+                    {tf('mobile.playlist.tracksByCreator', { n: p.trackCount, creator: p.creator })}
                     {fmtPlayCount(p.playCount) ? ' · ' + fmtPlayCount(p.playCount) : ''}
                   </Text>
                 </Pressable>
@@ -286,11 +292,11 @@ export default function PlaylistResults({
                     backgroundColor: colors.surface,
                     borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2, overflow: 'hidden',
                   }}>
-                    {MATCH_LABEL[p.match ?? 'other']}
+                    {tr(MATCH_LABEL[p.match ?? 'other'])}
                   </Text>
                   {p.match === 'creator' ? (
                     <Pressable onPress={() => void onlyCreator(p.creator)} hitSlop={6}>
-                      <Text style={{ color: colors.accent, fontSize: 11 }}>只看 TA 的歌单</Text>
+                      <Text style={{ color: colors.accent, fontSize: 11 }}>{tr('mobile.playlist.onlyTheirPlaylists')}</Text>
                     </Pressable>
                   ) : null}
                 </View>

@@ -13,13 +13,7 @@ import type { MembershipStatus, ApplyResult } from '@lxmn/core'
 import { activate, refreshMembership, deactivate } from '../license'
 import { connectWithMembership, disconnectSync } from '../sync'
 import { colors, useTopInset } from '../theme'
-
-const FEATURES = [
-  '一键补全全部第三方音源',
-  '桌面端 / 移动端同一账号通用',
-  '会员期内自动续期提醒',
-  '音源失效后自动更新订阅',
-]
+import { t as tr, tf, useLocale } from '../lib/i18n'
 
 function fmtDate(iso: string): string {
   const t = Date.parse(iso)
@@ -30,6 +24,13 @@ function fmtDate(iso: string): string {
 
 export default function MembershipScreen() {
   const insetTop = useTopInset()
+  useLocale()
+  const FEATURES = [
+    tr('mobile.member.feature1'),
+    tr('mobile.member.feature2'),
+    tr('mobile.member.feature3'),
+    tr('mobile.member.feature4'),
+  ]
   const [link, setLink] = useState('')
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<MembershipStatus | null>(null)
@@ -38,7 +39,7 @@ export default function MembershipScreen() {
 
   async function onActivate() {
     if (!link.trim()) {
-      setError('请先粘贴订阅链接或令牌')
+      setError(tr('mobile.member.errorEmptyLink'))
       return
     }
     setBusy(true)
@@ -55,7 +56,7 @@ export default function MembershipScreen() {
       if (st.state === 'active') {
         await connectWithMembership().catch(() => undefined)
       }
-      if (st.state === 'expired') setError('会员已过期，请续费后重新获取订阅链接')
+      if (st.state === 'expired') setError(tr('mobile.member.errorExpired'))
       if (st.state === 'invalid') setError(st.reason)
       if (st.state === 'active') setLink('')
     } catch (e) {
@@ -99,16 +100,16 @@ export default function MembershipScreen() {
     } catch (e) {
       const reason = e instanceof Error ? e.message : String(e)
       console.warn('[Lyco Music] Failed to open shop', e)
-      setError(`浏览器打开失败（${reason}），请手动访问 ${SHOP_URL}`)
+      setError(tf('mobile.member.errorOpenBrowser', { reason, url: SHOP_URL }))
     }
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insetTop }}>
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 32 }}>
-        <Text style={{ color: colors.fg, fontSize: 24, fontWeight: '700', marginBottom: 6 }}>音乐会员</Text>
+        <Text style={{ color: colors.fg, fontSize: 24, fontWeight: '700', marginBottom: 6 }}>{tr('nav.membership')}</Text>
         <Text style={{ color: colors.muted, fontSize: 13, marginBottom: 22 }}>
-          购买后获得订阅链接，填入下方即可解锁全部音源
+          {tr('mobile.member.subtitle')}
         </Text>
 
         {/* 价格卡 */}
@@ -126,12 +127,12 @@ export default function MembershipScreen() {
             <Text style={{ color: colors.accent, fontSize: 42, fontWeight: '800', lineHeight: 46 }}>
               ¥{ANNUAL_PRICE_CNY}
             </Text>
-            <Text style={{ color: colors.muted, fontSize: 15, marginLeft: 8, marginBottom: 6 }}>/ 年</Text>
+            <Text style={{ color: colors.muted, fontSize: 15, marginLeft: 8, marginBottom: 6 }}>{tr('mobile.member.perYear')}</Text>
           </View>
           <Text style={{ color: colors.muted, fontSize: 12, marginTop: 2 }}>
-            {ANNUAL_PRICE_CNY * 10} 积分（10 积分 = 1 元）
+            {tf('mobile.member.points', { n: ANNUAL_PRICE_CNY * 10 })}
           </Text>
-          <Text style={{ color: colors.fg, fontSize: 15, fontWeight: '600', marginTop: 10 }}>音乐会员 · 年卡</Text>
+          <Text style={{ color: colors.fg, fontSize: 15, fontWeight: '600', marginTop: 10 }}>{tr('mobile.member.annual')}</Text>
 
           <View style={{ marginTop: 16, gap: 10 }}>
             {FEATURES.map(f => (
@@ -152,7 +153,7 @@ export default function MembershipScreen() {
               alignItems: 'center',
             }}
           >
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>去商城购买</Text>
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>{tr('mobile.member.buy')}</Text>
           </Pressable>
           <Text style={{ color: colors.fainter, fontSize: 11, marginTop: 10, textAlign: 'center' }}>
             {SHOP_URL}
@@ -160,11 +161,11 @@ export default function MembershipScreen() {
         </View>
 
         {/* 激活区 */}
-        <Text style={{ color: colors.fg, fontSize: 16, fontWeight: '600', marginBottom: 10 }}>激活订阅</Text>
+        <Text style={{ color: colors.fg, fontSize: 16, fontWeight: '600', marginBottom: 10 }}>{tr('mobile.member.activateTitle')}</Text>
         <TextInput
           value={link}
           onChangeText={setLink}
-          placeholder="粘贴订阅链接或令牌"
+          placeholder={tr('mobile.member.linkPlaceholder')}
           placeholderTextColor={colors.fainter}
           autoCapitalize="none"
           autoCorrect={false}
@@ -192,7 +193,7 @@ export default function MembershipScreen() {
               alignItems: 'center',
             }}
           >
-            {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>激活</Text>}
+            {busy ? <ActivityIndicator color="#fff" /> : <Text style={{ color: '#fff', fontSize: 15, fontWeight: '600' }}>{tr('mobile.member.activate')}</Text>}
           </Pressable>
           <Pressable
             onPress={onCheck}
@@ -206,7 +207,7 @@ export default function MembershipScreen() {
               borderColor: '#3a3a3a',
             }}
           >
-            <Text style={{ color: colors.fg, fontSize: 15 }}>查询</Text>
+            <Text style={{ color: colors.fg, fontSize: 15 }}>{tr('mobile.member.check')}</Text>
           </Pressable>
         </View>
 
@@ -219,13 +220,13 @@ export default function MembershipScreen() {
           <View style={{ marginTop: 20, backgroundColor: colors.surface, borderRadius: 14, padding: 18, borderWidth: 1, borderColor: '#2f2f2f' }}>
             {result.state === 'active' ? (
               <>
-                <Text style={{ color: '#4ec97a', fontSize: 15, fontWeight: '700' }}>会员有效</Text>
+                <Text style={{ color: '#4ec97a', fontSize: 15, fontWeight: '700' }}>{tr('mem.valid')}</Text>
                 <Text style={{ color: colors.fg, fontSize: 14, marginTop: 8 }}>{result.plan.name}</Text>
                 <Text style={{ color: colors.muted, fontSize: 13, marginTop: 4 }}>
-                  到期时间：{fmtDate(result.plan.expiresAt)}
+                  {tf('mobile.member.expiresAt', { date: fmtDate(result.plan.expiresAt) })}
                 </Text>
                 <Text style={{ color: colors.muted, fontSize: 13, marginTop: 10, marginBottom: 4 }}>
-                  订阅包含的音源（{result.sources.length}）
+                  {tf('mobile.member.sources', { n: result.sources.length })}
                 </Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
                   {result.sources.map(s => (
@@ -238,21 +239,21 @@ export default function MembershipScreen() {
                     不把未实现的算作已解锁，避免用户以为能听却搜不到歌。 */}
                 {applyResult && applyResult.applied.length ? (
                   <Text style={{ color: colors.fainter, fontSize: 12, marginTop: 10 }}>
-                    本次已应用：{applyResult.applied.join('、')}
+                    {tf('mobile.member.applied', { list: applyResult.applied.join('、') })}
                   </Text>
                 ) : null}
                 {applyResult && applyResult.unavailable.length ? (
                   <Text style={{ color: '#c88a3a', fontSize: 12, marginTop: 6 }}>
-                    暂未支持：{applyResult.unavailable.join('、')}（订阅包含，但当前版本尚未内置）
+                    {tf('mobile.member.unavailable', { list: applyResult.unavailable.join('、') })}
                   </Text>
                 ) : null}
                 <Pressable onPress={onDeactivate} disabled={busy} style={{ marginTop: 16 }}>
-                  <Text style={{ color: colors.fainter, fontSize: 13 }}>退出会员</Text>
+                  <Text style={{ color: colors.fainter, fontSize: 13 }}>{tr('mobile.member.signOutMember')}</Text>
                 </Pressable>
               </>
             ) : result.state === 'expired' ? (
               <>
-                <Text style={{ color: colors.accent, fontSize: 15, fontWeight: '700' }}>会员已过期</Text>
+                <Text style={{ color: colors.accent, fontSize: 15, fontWeight: '700' }}>{tr('mem.expired')}</Text>
                 <Text style={{ color: colors.muted, fontSize: 13, marginTop: 6 }}>
                   {result.plan.name} · {fmtDate(result.plan.expiresAt)}
                 </Text>
@@ -260,7 +261,7 @@ export default function MembershipScreen() {
             ) : result.state === 'invalid' ? (
               <Text style={{ color: colors.accent, fontSize: 14 }}>{result.reason}</Text>
             ) : (
-              <Text style={{ color: colors.muted, fontSize: 14 }}>尚未激活会员</Text>
+              <Text style={{ color: colors.muted, fontSize: 14 }}>{tr('mem.none')}</Text>
             )}
           </View>
         ) : null}

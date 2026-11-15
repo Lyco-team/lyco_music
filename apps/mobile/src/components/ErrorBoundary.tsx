@@ -8,6 +8,7 @@ import React from 'react'
 import { Pressable, ScrollView, Text, View } from 'react-native'
 import { errorRecords, recordError } from '../lib/safe'
 import { colors } from '../theme'
+import { t as tr, tf, subscribeLocale } from '../lib/i18n'
 
 interface Props { children: React.ReactNode }
 interface State { error: Error | null; showDetail: boolean }
@@ -15,13 +16,23 @@ interface State { error: Error | null; showDetail: boolean }
 export default class ErrorBoundary extends React.Component<Props, State> {
   state: State = { error: null, showDetail: false }
 
+  private unsubscribe?: () => void
+
+  componentDidMount(): void {
+    this.unsubscribe = subscribeLocale(() => this.forceUpdate())
+  }
+
+  componentWillUnmount(): void {
+    this.unsubscribe?.()
+  }
+
   static getDerivedStateFromError(error: Error): Partial<State> {
     return { error }
   }
 
   componentDidCatch(error: Error, info: React.ErrorInfo): void {
     const where = info.componentStack ? info.componentStack.split('\n')[1]?.trim() ?? 'unknown' : 'unknown'
-    recordError('渲染 ' + where, error)
+    recordError(tf('mobile.error.render', { where }), error)
   }
 
   render(): React.ReactNode {
@@ -29,7 +40,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
     const recs = errorRecords()
     return (
       <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: 80, paddingHorizontal: 24 }}>
-        <Text style={{ color: colors.accent, fontSize: 18, fontWeight: '700' }}>界面出错了</Text>
+        <Text style={{ color: colors.accent, fontSize: 18, fontWeight: '700' }}>{tr('mobile.error.title')}</Text>
         <Text style={{ color: colors.fg, fontSize: 14, marginTop: 10 }}>
           {this.state.error.message || String(this.state.error)}
         </Text>
@@ -37,19 +48,19 @@ export default class ErrorBoundary extends React.Component<Props, State> {
           onPress={() => { this.setState({ error: null }) }}
           style={{ marginTop: 20, alignSelf: 'flex-start', backgroundColor: colors.accent, borderRadius: 18, paddingHorizontal: 18, paddingVertical: 9 }}
         >
-          <Text style={{ color: '#fff', fontSize: 14 }}>返回继续用</Text>
+          <Text style={{ color: '#fff', fontSize: 14 }}>{tr('mobile.error.back')}</Text>
         </Pressable>
         <Pressable
           onPress={() => this.setState({ showDetail: !this.state.showDetail })}
           style={{ marginTop: 14 }}
         >
           <Text style={{ color: colors.muted, fontSize: 13 }}>
-            {this.state.showDetail ? '收起诊断信息' : '查看诊断信息（截图发给开发者）'}
+            {this.state.showDetail ? tr('mobile.error.hideDetail') : tr('mobile.error.showDetail')}
           </Text>
         </Pressable>
         {this.state.showDetail ? (
           <ScrollView style={{ marginTop: 10, maxHeight: 320 }}>
-            {recs.length === 0 ? <Text style={{ color: colors.fainter, fontSize: 12 }}>暂无记录</Text> : null}
+            {recs.length === 0 ? <Text style={{ color: colors.fainter, fontSize: 12 }}>{tr('mobile.error.noRecords')}</Text> : null}
             {recs.map((r, i) => (
               <Text key={i} style={{ color: colors.fainter, fontSize: 11, marginBottom: 8 }}>
                 {new Date(r.at).toLocaleTimeString()} [{r.label}] {r.message}

@@ -17,6 +17,7 @@ import { play, usePlayerState } from '../player'
 import { library } from '../sync'
 import { colors, useTopInset } from '../theme'
 import PlaylistResults from '../components/PlaylistResults'
+import { t as tr, tf, useLocale } from '../lib/i18n'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const DEFAULT_COVER = require('../assets/art/cover-default.jpg') as number
@@ -72,6 +73,7 @@ export default function DiscoverScreen({
   onPlaylistConsumed?: () => void
 }) {
   const insetTop = useTopInset()
+  useLocale()
   const [tab, setTab] = useState<'boards' | 'playlists'>(initialKeyword || initialPlaylist ? 'playlists' : 'boards')
   const [error, setError] = useState('')
   const [detail, setDetail] = useState<Detail | null>(null)
@@ -146,7 +148,7 @@ export default function DiscoverScreen({
     const tracks = detail?.tracks ?? []
     if (!tracks.length) return
     const ok = await library.addToTrial(tracks)
-    setMsg(ok ? '已加入试听列表 ' + tracks.length + ' 首' : '这些歌都已经在试听列表里了')
+    setMsg(ok ? tf('mobile.discover.addedTrial', { n: tracks.length }) : tr('mobile.discover.alreadyInTrial'))
   }
 
   /** 存成自建歌单：榜单天天变，想留住某一期就靠这个 */
@@ -158,7 +160,7 @@ export default function DiscoverScreen({
     for (const item of d.tracks) {
       if (await library.addToPlaylist(pl.id, item)) added++
     }
-    setMsg('已存为歌单「' + pl.name + '」：' + added + ' 首（去「我的」里看）')
+    setMsg(tf('mobile.discover.savedPlaylist', { name: pl.name, n: added }))
   }
 
   /* ---------------- 详情页 ---------------- */
@@ -168,13 +170,13 @@ export default function DiscoverScreen({
       <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insetTop }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 20, paddingTop: 12 }}>
           <Pressable onPress={closeDetail} hitSlop={10}>
-            <Text style={{ color: colors.muted, fontSize: 14 }}>返回</Text>
+            <Text style={{ color: colors.muted, fontSize: 14 }}>{tr('mobile.discover.back')}</Text>
           </Pressable>
           <Text numberOfLines={1} style={{ color: colors.fg, fontSize: 19, fontWeight: '700', flex: 1 }}>
             {detail.name}
           </Text>
           {detail.total ? (
-            <Text style={{ color: colors.fainter, fontSize: 12 }}>{detail.total} 首</Text>
+            <Text style={{ color: colors.fainter, fontSize: 12 }}>{tf('mobile.my.tracks', { n: detail.total })}</Text>
           ) : null}
         </View>
 
@@ -182,15 +184,15 @@ export default function DiscoverScreen({
           <View style={{ flexDirection: 'row', gap: 10, paddingHorizontal: 20, paddingTop: 14 }}>
             <Pressable onPress={() => void playAll()}
               style={{ backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8 }}>
-              <Text style={{ color: '#fff', fontSize: 13 }}>播放全部</Text>
+              <Text style={{ color: '#fff', fontSize: 13 }}>{tr('search.playAll')}</Text>
             </Pressable>
             <Pressable onPress={() => void addAllToTrial()}
               style={{ borderWidth: 1, borderColor: colors.divider, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8 }}>
-              <Text style={{ color: colors.muted, fontSize: 13 }}>加入试听</Text>
+              <Text style={{ color: colors.muted, fontSize: 13 }}>{tr('mobile.discover.addTrial')}</Text>
             </Pressable>
             <Pressable onPress={() => void saveAsPlaylist()}
               style={{ borderWidth: 1, borderColor: colors.divider, borderRadius: 999, paddingHorizontal: 16, paddingVertical: 8 }}>
-              <Text style={{ color: colors.muted, fontSize: 13 }}>存为歌单</Text>
+              <Text style={{ color: colors.muted, fontSize: 13 }}>{tr('mobile.discover.savePlaylist')}</Text>
             </Pressable>
           </View>
         ) : null}
@@ -242,9 +244,9 @@ export default function DiscoverScreen({
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insetTop }}>
       <View style={{ paddingHorizontal: 20, paddingTop: 12 }}>
-        <Text style={{ color: colors.fg, fontSize: 24, fontWeight: '700' }}>发现音乐</Text>
+        <Text style={{ color: colors.fg, fontSize: 24, fontWeight: '700' }}>{tr('page.discover')}</Text>
         <View style={{ flexDirection: 'row', gap: 8, marginTop: 14 }}>
-          {([['boards', '排行榜'], ['playlists', '歌单搜索']] as const).map(([k, label]) => (
+          {([['boards', tr('mobile.discover.tabBoards')], ['playlists', tr('mobile.discover.tabPlaylists')]] as const).map(([k, label]) => (
             <Pressable
               key={k}
               onPress={() => setTab(k)}
@@ -276,7 +278,7 @@ export default function DiscoverScreen({
         <ScrollView contentContainerStyle={{ paddingBottom: 24 }}>
           <View style={{ paddingHorizontal: 20, paddingTop: 16, gap: 10 }}>
             <Text style={{ color: colors.fainter, fontSize: 12, lineHeight: 18 }}>
-              网易云官方榜，点开就是完整曲目。榜单每天更新，想留住某一期用「存为歌单」。
+              {tr('mobile.discover.boardsHint')}
             </Text>
             {WY_BOARDS.map(b => (
               <Pressable

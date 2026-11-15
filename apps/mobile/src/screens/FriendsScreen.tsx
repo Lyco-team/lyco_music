@@ -10,6 +10,7 @@ import {
 import { useFriendsApi, type ChatMessage, type FriendsState } from '../friends'
 import { pullFeed, type FeedItem } from '../share'
 import { colors, useTopInset } from '../theme'
+import { t as tr, tf, useLocale } from '../lib/i18n'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const AVATAR = require('../assets/art/avatar-default.jpg') as number
@@ -23,6 +24,7 @@ function fmtTime(t: number): string {
 
 export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMembership?: () => void; onOpenMy?: () => void }) {
   const insetTop = useTopInset()
+  useLocale()
   const api = useFriendsApi()
   const [state, setState] = useState<FriendsState>({
     me: null, friends: [], pendingIn: [], pendingOut: [],
@@ -120,21 +122,21 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
       style={{ flex: 1, backgroundColor: colors.bg, paddingTop: insetTop }}
       contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
     >
-      <Text style={{ color: colors.fg, fontSize: 24, fontWeight: '700' }}>好友</Text>
+      <Text style={{ color: colors.fg, fontSize: 24, fontWeight: '700' }}>{tr('page.friends')}</Text>
 
       {/* 确实没有会员：引导去开通 */}
       {api.denied && !state.me ? (
         <View style={{ marginTop: 40, alignItems: 'center' }}>
           <Image source={AVATAR} style={{ width: 110, height: 110, borderRadius: 55, opacity: 0.9 }} />
-          <Text style={{ marginTop: 16, color: colors.fg, fontSize: 16 }}>好友功能需要音乐会员</Text>
+          <Text style={{ marginTop: 16, color: colors.fg, fontSize: 16 }}>{tr('fr.needVip')}</Text>
           <Text style={{ marginTop: 6, color: colors.muted, fontSize: 13, textAlign: 'center' }}>
-            开通后用好友码加好友{'\n'}看在线状态
+            {tr('mobile.friends.needVipDesc')}
           </Text>
           <Pressable
             onPress={onNeedMembership}
             style={{ marginTop: 18, backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 26, paddingVertical: 11 }}
           >
-            <Text style={{ color: '#fff', fontSize: 14 }}>去开通</Text>
+            <Text style={{ color: '#fff', fontSize: 14 }}>{tr('fr.goActivate')}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -146,7 +148,7 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
       */}
       {!api.denied && !state.me && !api.busy && !!api.error ? (
         <View style={{ marginTop: 40, alignItems: 'center' }}>
-          <Text style={{ color: colors.fg, fontSize: 16 }}>好友列表加载失败</Text>
+          <Text style={{ color: colors.fg, fontSize: 16 }}>{tr('fr.loadFail')}</Text>
           <Text style={{ marginTop: 6, color: colors.muted, fontSize: 13, textAlign: 'center' }}>
             {api.error}
           </Text>
@@ -154,7 +156,7 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
             onPress={() => { void pull() }}
             style={{ marginTop: 18, borderWidth: 1, borderColor: colors.divider, borderRadius: 999, paddingHorizontal: 26, paddingVertical: 10 }}
           >
-            <Text style={{ color: colors.fg, fontSize: 14 }}>重新加载</Text>
+            <Text style={{ color: colors.fg, fontSize: 14 }}>{tr('fr.reload')}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -176,7 +178,7 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
                 {state.me.nickname}
               </Text>
               <View style={{ marginTop: 4, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Text style={{ color: colors.muted, fontSize: 12 }}>好友码</Text>
+                <Text style={{ color: colors.muted, fontSize: 12 }}>{tr('fr.code')}</Text>
                 <Text style={{ color: colors.fg, fontSize: 14, letterSpacing: 2, fontFamily: 'monospace' }}>
                   {state.me.friendCode}
                 </Text>
@@ -186,14 +188,14 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
 
           {/* 加好友 */}
           <View style={{ marginTop: 14, backgroundColor: colors.surface, borderRadius: 12, padding: 16 }}>
-            <Text style={{ color: colors.fg, fontSize: 15, fontWeight: '600' }}>添加好友</Text>
+            <Text style={{ color: colors.fg, fontSize: 15, fontWeight: '600' }}>{tr('fr.add')}</Text>
             <View style={{ marginTop: 10, flexDirection: 'row', gap: 8 }}>
               <TextInput
                 value={code}
                 onChangeText={(t) => setCode(t.toUpperCase())}
                 maxLength={8}
                 autoCapitalize="characters"
-                placeholder="对方的好友码"
+                placeholder={tr('mobile.friends.codePlaceholder')}
                 placeholderTextColor={colors.fainter}
                 style={{
                   flex: 1, borderWidth: 1, borderColor: colors.divider, borderRadius: 10,
@@ -209,7 +211,7 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
                   paddingVertical: 10, justifyContent: 'center', opacity: api.busy || !code.trim() ? 0.5 : 1,
                 }}
               >
-                <Text style={{ color: '#fff', fontSize: 13 }}>添加</Text>
+                <Text style={{ color: '#fff', fontSize: 13 }}>{tr('mobile.friends.addButton')}</Text>
               </Pressable>
             </View>
           </View>
@@ -218,7 +220,7 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
           {state.pendingIn.length ? (
             <View style={{ marginTop: 16 }}>
               <Text style={{ color: colors.fg, fontSize: 15, fontWeight: '600' }}>
-                收到的请求（{state.pendingIn.length}）
+                {tf('mobile.friends.pending', { n: state.pendingIn.length })}
               </Text>
               {state.pendingIn.map((p) => (
                 <View key={p.id} style={{
@@ -236,13 +238,13 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
                     onPress={() => { void api.accept(p.id).then(() => pull()) }}
                     style={{ backgroundColor: colors.accent, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7 }}
                   >
-                    <Text style={{ color: '#fff', fontSize: 12 }}>接受</Text>
+                    <Text style={{ color: '#fff', fontSize: 12 }}>{tr('mobile.friends.accept')}</Text>
                   </Pressable>
                   <Pressable
                     onPress={() => { void api.decline(p.id).then(() => pull()) }}
                     style={{ borderWidth: 1, borderColor: colors.divider, borderRadius: 999, paddingHorizontal: 14, paddingVertical: 7 }}
                   >
-                    <Text style={{ color: colors.muted, fontSize: 12 }}>拒绝</Text>
+                    <Text style={{ color: colors.muted, fontSize: 12 }}>{tr('mobile.friends.decline')}</Text>
                   </Pressable>
                 </View>
               ))}
@@ -252,7 +254,7 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
           {/* 好友动态 */}
           {feed.length ? (
             <View style={{ marginTop: 16 }}>
-              <Text style={{ color: colors.fg, fontSize: 15, fontWeight: '600' }}>好友动态</Text>
+              <Text style={{ color: colors.fg, fontSize: 15, fontWeight: '600' }}>{tr('fr.feed')}</Text>
               {feed.map((item, i) => (
                 <View key={i} style={{
                   marginTop: 8, backgroundColor: colors.surface, borderRadius: 12, padding: 12,
@@ -260,9 +262,9 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
                 }}>
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: colors.fg, fontSize: 13.5 }} numberOfLines={1}>
-                      {item.nickname} 分享了「{item.payload.name}」
+                      {tf('mobile.friends.shared', { name: item.nickname, title: item.payload.name })}
                     </Text>
-                    <Text style={{ color: colors.muted, fontSize: 11 }}>{item.payload.count} 首</Text>
+                    <Text style={{ color: colors.muted, fontSize: 11 }}>{tf('mobile.my.tracks', { n: item.payload.count })}</Text>
                   </View>
                   <Pressable
                     onPress={() => {
@@ -272,7 +274,7 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
                       onOpenMy?.()
                     }}
                     style={{ backgroundColor: colors.accent + '22', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}>
-                    <Text style={{ color: colors.accent, fontSize: 12 }}>导入</Text>
+                    <Text style={{ color: colors.accent, fontSize: 12 }}>{tr('mobile.my.import')}</Text>
                   </Pressable>
                 </View>
               ))}
@@ -282,11 +284,11 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
           {/* 好友列表 */}
           <View style={{ marginTop: 16 }}>
             <Text style={{ color: colors.fg, fontSize: 15, fontWeight: '600' }}>
-              我的好友（{state.friends.length}）
+              {tf('mobile.friends.myFriends', { n: state.friends.length })}
             </Text>
             {!state.friends.length ? (
               <Text style={{ marginTop: 8, color: colors.muted, fontSize: 13 }}>
-                还没有好友。把你的好友码发给朋友。
+                {tr('mobile.friends.empty')}
               </Text>
             ) : state.friends.map((f) => (
               <View key={f.friendCode} style={{
@@ -304,7 +306,7 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
                 <View style={{ flex: 1 }}>
                   <Text style={{ color: colors.fg, fontSize: 14 }} numberOfLines={1}>{f.nickname}</Text>
                   <Text style={{ color: colors.muted, fontSize: 11 }}>
-                    {f.online ? '在线' : '最近活跃 ' + fmtTime(f.lastActiveAt)}
+                    {f.online ? tr('mobile.friends.online') : tf('mobile.friends.lastActive', { time: fmtTime(f.lastActiveAt) })}
                   </Text>
                 </View>
                 <Pressable
@@ -312,14 +314,14 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
                   style={{ backgroundColor: colors.accent + '22', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}
                 >
                   <Text style={{ color: colors.accent, fontSize: 12 }}>
-                    聊天{unread[f.friendCode] ? ' ' + unread[f.friendCode] : ''}
+                    {tf('mobile.friends.chat', { badge: unread[f.friendCode] ? ' ' + unread[f.friendCode] : '' })}
                   </Text>
                 </Pressable>
                 <Pressable
                   onPress={() => { void api.remove(f.friendCode).then(() => pull()) }}
                   style={{ borderWidth: 1, borderColor: colors.divider, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 6 }}
                 >
-                  <Text style={{ color: colors.muted, fontSize: 12 }}>删除</Text>
+                  <Text style={{ color: colors.muted, fontSize: 12 }}>{tr('mobile.friends.delete')}</Text>
                 </Pressable>
               </View>
             ))}
@@ -333,13 +335,13 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
                   {state.friends.find((x) => x.friendCode === chatWith)?.nickname ?? chatWith}
                 </Text>
                 <Pressable onPress={() => { setChatWith(''); setMessages([]) }}>
-                  <Text style={{ color: colors.muted, fontSize: 12 }}>关闭</Text>
+                  <Text style={{ color: colors.muted, fontSize: 12 }}>{tr('common.close')}</Text>
                 </Pressable>
               </View>
 
               <View style={{ marginTop: 10, maxHeight: 280 }}>
                 {!messages.length ? (
-                  <Text style={{ color: colors.muted, fontSize: 13 }}>还没有聊天记录，打个招呼吧</Text>
+                  <Text style={{ color: colors.muted, fontSize: 13 }}>{tr('mobile.friends.emptyChat')}</Text>
                 ) : messages.map((m) => (
                   <View
                     key={m.id}
@@ -352,10 +354,10 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
                       {m.kind === 'share' ? (
                         <View>
                           <Text style={{ color: m.mine ? '#fff' : colors.fg, fontSize: 13 }}>
-                            歌单 · {m.shareName || m.text}
+                            {tf('mobile.friends.sharePlaylist', { name: m.shareName || m.text })}
                           </Text>
                           <Text style={{ color: m.mine ? '#ffffffcc' : colors.muted, fontSize: 11, marginTop: 2 }}>
-                            {m.shareCount} 首 · 分享码 {m.shareCode}
+                            {tf('mobile.friends.shareMeta', { n: m.shareCount, code: m.shareCode })}
                           </Text>
                         </View>
                       ) : (
@@ -370,7 +372,7 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
                 <TextInput
                   value={draft}
                   onChangeText={setDraft}
-                  placeholder="说点什么…"
+                  placeholder={tr('mobile.friends.chatPlaceholder')}
                   placeholderTextColor={colors.fainter}
                   style={{
                     flex: 1, color: colors.fg, backgroundColor: colors.bg, borderRadius: 999,
@@ -386,7 +388,7 @@ export default function FriendsScreen({ onNeedMembership, onOpenMy }: { onNeedMe
                     paddingHorizontal: 16, paddingVertical: 9, opacity: draft.trim() ? 1 : 0.5,
                   }}
                 >
-                  <Text style={{ color: '#fff', fontSize: 13 }}>发送</Text>
+                  <Text style={{ color: '#fff', fontSize: 13 }}>{tr('mobile.friends.send')}</Text>
                 </Pressable>
               </View>
               {api.error ? (

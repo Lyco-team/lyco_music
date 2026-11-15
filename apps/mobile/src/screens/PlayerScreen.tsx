@@ -35,6 +35,7 @@ import {
 import { getSource, hasSource, parseCommentContent, type MusicComment } from '@lxmn/core'
 import { fmtCommentTime, fmtLikes, resolveCommentTarget, type CommentSort, type CommentTarget } from '../lib/comments'
 import { useMobileSleepTimer } from '../lib/sleep-timer'
+import { t as tr, tf, useLocale } from '../lib/i18n'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const DEFAULT_COVER = require('../assets/art/cover-default.jpg') as number
@@ -144,6 +145,7 @@ function ProgressBar({
 /* ------------------------------------------------------------------ */
 
 export default function PlayerScreen({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  useLocale()
   const st = usePlayerState()
   const { position, duration, playing } = useProgressState()
   const { lines, activeIndex } = useLyricLines()
@@ -380,12 +382,12 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
         <Ambient color={mood} />
         {/* 顶栏 */}
         <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 18, paddingVertical: 10 }}>
-          <Pressable hitSlop={14} onPress={onClose} accessibilityLabel="收起播放页">
+          <Pressable hitSlop={14} onPress={onClose} accessibilityLabel={tr('mobile.player.collapse')}>
             <ChevronDownIcon size={26} />
           </Pressable>
           <View style={{ alignItems: 'center', flex: 1, marginHorizontal: 10 }}>
             <Text numberOfLines={1} style={{ color: colors.fg, fontSize: 16.5, fontWeight: '600' }}>
-              {item?.name ?? '未在播放'}
+              {item?.name ?? tr('mobile.player.notPlaying')}
             </Text>
             <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 12, marginTop: 3 }}>
               {item?.singer ?? '—'}
@@ -395,13 +397,13 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
             <Pressable
               hitSlop={12}
               onPress={() => setRateOpen(true)}
-              accessibilityLabel={`播放速度 ${fmtRate(st.rate)}`}
+              accessibilityLabel={tf('mobile.player.rateLabel', { rate: fmtRate(st.rate) })}
             >
               <Text style={{ color: st.rate === 1 ? colors.muted : colors.accent, fontSize: 11.5, fontWeight: st.rate === 1 ? '400' : '700' }}>
                 {fmtRate(st.rate)}
               </Text>
             </Pressable>
-            <Pressable hitSlop={14} onPress={safe('切换音质', () => cycleQuality())} accessibilityLabel={'音质 ' + st.quality}>
+            <Pressable hitSlop={14} onPress={safe(tr('mobile.player.switchQuality'), () => cycleQuality())} accessibilityLabel={tf('mobile.player.qualityLabel', { quality: st.quality })}>
               <Text style={{ color: colors.muted, fontSize: 11.5 }}>{st.quality}</Text>
             </Pressable>
           </View>
@@ -540,7 +542,7 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
               {(st.loading || st.error) && (
                 <Pressable
                   onPress={st.error ? () => { void retry() } : undefined}
-                  accessibilityLabel={st.error ? '重试播放' : undefined}
+                  accessibilityLabel={st.error ? tr('mobile.player.retry') : undefined}
                 >
                   <Text
                     numberOfLines={3}
@@ -552,7 +554,7 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
                       paddingHorizontal: 36,
                     }}
                   >
-                    {st.loading ? '正在获取播放地址…' : st.error}
+                    {st.loading ? tr('mobile.player.fetching') : st.error}
                   </Text>
                 </Pressable>
               )}
@@ -565,7 +567,7 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
                   <Pressable
                     key={i}
                     onPress={() => goTo(i)}
-                    accessibilityLabel={i === 0 ? '封面' : '歌词'}
+                    accessibilityLabel={i === 0 ? tr('mobile.player.cover') : tr('mobile.player.lyric')}
                     style={{ paddingVertical: 14, paddingHorizontal: 7 }}
                   >
                     <View
@@ -599,7 +601,7 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
                     const distance = Math.abs(index - activeIndex)
                     return (
                       <Pressable
-                        onPress={safe('歌词跳转', () => seek(line.time))}
+                        onPress={safe(tr('mobile.player.lyricSeek'), () => seek(line.time))}
                         // 只记高度（y 不可靠，见上面注释）。选中行字号变大后高度会变，
                         // 这里补一次无动画校正 —— 滚动不改变行高，不会循环触发。
                         onLayout={e => {
@@ -645,7 +647,7 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
               ) : (
                 <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
                   <Text style={{ color: colors.fainter, fontSize: 14 }}>
-                    {st.lyric ? '歌词解析中…' : '暂无歌词'}
+                    {st.lyric ? tr('mobile.player.parsingLyric') : tr('mobile.player.noLyric')}
                   </Text>
                 </View>
               )}
@@ -662,16 +664,16 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
             paddingHorizontal: 34, marginTop: 6, marginBottom: 4,
           }}
         >
-          <Pressable hitSlop={12} onPress={safe('切换播放模式', () => cycleMode())} accessibilityLabel={modeLabel()}>
+          <Pressable hitSlop={12} onPress={safe(tr('mobile.player.switchMode'), () => cycleMode())} accessibilityLabel={modeLabel()}>
             {st.mode === 'shuffle'
               ? <ShuffleIcon size={21} color={colors.muted} />
               : <LoopIcon size={21} single={st.mode === 'single'} color={colors.muted} />}
           </Pressable>
-          <Pressable hitSlop={14} onPress={safe('上一首', () => prev())} disabled={!st.queue.length}>
+          <Pressable hitSlop={14} onPress={safe(tr('mobile.player.prev'), () => prev())} disabled={!st.queue.length}>
             <SkipIcon size={28} direction="prev" color={colors.fg} />
           </Pressable>
           <Pressable
-            onPress={safe('播放/暂停', () => toggle())}
+            onPress={safe(tr('mobile.player.playPause'), () => toggle())}
             disabled={st.loading || !item}
             style={{
               width: 66, height: 66, borderRadius: 33,
@@ -684,10 +686,10 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
               ? <PauseIcon size={24} color={colors.bg} />
               : <PlayIcon size={26} color={colors.bg} />}
           </Pressable>
-          <Pressable hitSlop={14} onPress={safe('下一首', () => next())} disabled={!st.queue.length}>
+          <Pressable hitSlop={14} onPress={safe(tr('mobile.player.next'), () => next())} disabled={!st.queue.length}>
             <SkipIcon size={28} direction="next" color={colors.fg} />
           </Pressable>
-          <Pressable hitSlop={12} onPress={safe('打开播放列表', () => setQueueOpen(true))} accessibilityLabel="播放列表">
+          <Pressable hitSlop={12} onPress={safe(tr('mobile.player.openQueue'), () => setQueueOpen(true))} accessibilityLabel={tr('mobile.player.queue')}>
             <ListIcon size={21} color={colors.muted} />
           </Pressable>
         </View>
@@ -699,22 +701,22 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
             paddingHorizontal: 36, paddingTop: 6, paddingBottom: 14,
           }}
         >
-          <Pressable hitSlop={10} onPress={safe('收藏', onToggleFav)} accessibilityLabel={fav ? '取消收藏' : '收藏'}>
+          <Pressable hitSlop={10} onPress={safe(tr('mobile.player.favorite'), onToggleFav)} accessibilityLabel={fav ? tr('mobile.player.unfavorite') : tr('mobile.player.favorite')}>
             <HeartIcon size={22} filled={fav} color={fav ? colors.accent : colors.muted} />
           </Pressable>
-          <Pressable hitSlop={10} onPress={safe('不喜欢', onToggleBlock)} accessibilityLabel={blocked ? '取消不喜欢' : '不喜欢'}>
+          <Pressable hitSlop={10} onPress={safe(tr('mobile.player.dislike'), onToggleBlock)} accessibilityLabel={blocked ? tr('mobile.player.undoDislike') : tr('mobile.player.dislike')}>
             <BlockIcon size={22} color={blocked ? colors.accent : colors.muted} active={blocked} />
           </Pressable>
-          <Pressable hitSlop={10} onPress={safe('查看评论', () => setCommentOpen(true))} accessibilityLabel="评论">
+          <Pressable hitSlop={10} onPress={safe(tr('mobile.player.viewComments'), () => setCommentOpen(true))} accessibilityLabel={tr('mobile.player.comments')}>
             <CommentIcon size={22} color={colors.muted} />
           </Pressable>
-          <Pressable hitSlop={10} onPress={safe('定时关闭', () => setSleepOpen(true))} accessibilityLabel={sleep.active ? '定时暂停 ' + sleep.label : '定时关闭'}>
+          <Pressable hitSlop={10} onPress={safe(tr('mobile.player.sleepTimer'), () => setSleepOpen(true))} accessibilityLabel={sleep.active ? tf('mobile.player.sleepOn', { label: sleep.label }) : tr('mobile.player.sleepTimer')}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
               <TimerIcon size={22} color={sleep.active ? colors.accent : colors.muted} />
               {sleep.active ? <Text style={{ color: colors.accent, fontSize: 10 }}>{sleep.label}</Text> : null}
             </View>
           </Pressable>
-          <Pressable hitSlop={10} onPress={safe('分享', onShare)} accessibilityLabel="分享">
+          <Pressable hitSlop={10} onPress={safe(tr('mobile.player.share'), onShare)} accessibilityLabel={tr('mobile.player.share')}>
             <ShareIcon size={22} color={colors.muted} />
           </Pressable>
         </View>
@@ -727,15 +729,15 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
               onPress={() => undefined}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 }}>
-                <Text style={{ color: colors.fg, fontSize: 15.5, fontWeight: '600' }}>播放列表（{st.queue.length}）</Text>
+                <Text style={{ color: colors.fg, fontSize: 15.5, fontWeight: '600' }}>{tf('mobile.player.queueTitle', { n: st.queue.length })}</Text>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
                   {st.queue.length ? (
-                    <Pressable onPress={safe('清空播放列表', () => clearQueue())} hitSlop={10} accessibilityLabel="清空播放列表">
-                      <Text style={{ color: colors.accent, fontSize: 13 }}>清空</Text>
+                    <Pressable onPress={safe(tr('mobile.player.clearQueue'), () => clearQueue())} hitSlop={10} accessibilityLabel={tr('mobile.player.clearQueue')}>
+                      <Text style={{ color: colors.accent, fontSize: 13 }}>{tr('mobile.player.clear')}</Text>
                     </Pressable>
                   ) : null}
                   <Pressable onPress={() => setQueueOpen(false)} hitSlop={10}>
-                    <Text style={{ color: colors.muted, fontSize: 14 }}>关闭</Text>
+                    <Text style={{ color: colors.muted, fontSize: 14 }}>{tr('common.close')}</Text>
                   </Pressable>
                 </View>
               </View>
@@ -743,7 +745,7 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
                 {st.queue.map((q, i) => (
                   <View key={q.source + '-' + String(q.songmid) + '-' + i} style={{ flexDirection: 'row', alignItems: 'center', paddingRight: 8 }}>
                     <Pressable
-                      onPress={safe('队列选歌', () => { setQueueOpen(false); return play(q) })}
+                      onPress={safe(tr('mobile.player.pickFromQueue'), () => { setQueueOpen(false); return play(q) })}
                       style={{ flex: 1, paddingHorizontal: 20, paddingVertical: 11 }}
                     >
                       <Text numberOfLines={1} style={{ color: i === st.index ? colors.accent : colors.fg, fontSize: 14.5 }}>
@@ -752,16 +754,16 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
                       <Text numberOfLines={1} style={{ color: colors.fainter, fontSize: 12, marginTop: 2 }}>{q.singer}</Text>
                     </Pressable>
                     <Pressable
-                      onPress={safe('移出播放列表', () => removeFromQueue(i))}
+                      onPress={safe(tr('mobile.player.removeFromQueue'), () => removeFromQueue(i))}
                       hitSlop={10}
-                      accessibilityLabel={'移出播放列表：' + q.name}
+                      accessibilityLabel={tf('mobile.player.removeFromQueueLabel', { name: q.name })}
                       style={{ paddingHorizontal: 10, paddingVertical: 8 }}
                     >
-                      <Text style={{ color: colors.muted, fontSize: 12 }}>移除</Text>
+                      <Text style={{ color: colors.muted, fontSize: 12 }}>{tr('mobile.player.remove')}</Text>
                     </Pressable>
                   </View>
                 ))}
-                {!st.queue.length ? <Text style={{ color: colors.fainter, padding: 20, fontSize: 13 }}>队列为空</Text> : null}
+                {!st.queue.length ? <Text style={{ color: colors.fainter, padding: 20, fontSize: 13 }}>{tr('mobile.player.queueEmpty')}</Text> : null}
               </ScrollView>
             </Pressable>
           </Pressable>
@@ -774,23 +776,23 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
           <SafeAreaProvider>
             <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1, backgroundColor: colors.surface }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, gap: 8 }}>
-                <Text style={{ color: colors.fg, fontSize: 16, fontWeight: '600' }}>评论</Text>
+                <Text style={{ color: colors.fg, fontSize: 16, fontWeight: '600' }}>{tr('mobile.player.comments')}</Text>
                 {commentTotal > 0 ? <Text style={{ color: colors.muted, fontSize: 12 }}>{commentTotal}</Text> : null}
                 <View style={{ flex: 1 }} />
                 <Pressable onPress={() => setCommentOpen(false)} hitSlop={10}>
-                  <Text style={{ color: colors.muted, fontSize: 14 }}>关闭</Text>
+                  <Text style={{ color: colors.muted, fontSize: 14 }}>{tr('common.close')}</Text>
                 </Pressable>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 10, gap: 8 }}>
                 {commentTarget?.borrowed ? (
-                  <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 11.5, flexShrink: 1 }}>来自网易云同名歌曲</Text>
+                  <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 11.5, flexShrink: 1 }}>{tr('pl.borrowed')}</Text>
                 ) : null}
                 <View style={{ flex: 1 }} />
                 {(['hot', 'new'] as CommentSort[]).map(s => (
                   <Pressable
                     key={s}
-                    onPress={safe('切换评论排序', () => setCommentSort(s))}
-                    accessibilityLabel={'切换评论排序：' + (s === 'hot' ? '热门' : '最新')}
+                    onPress={safe(tr('mobile.player.sortComments'), () => setCommentSort(s))}
+                    accessibilityLabel={tf('mobile.player.sortLabel', { label: s === 'hot' ? tr('mobile.player.sortHot') : tr('mobile.player.sortNew') })}
                     accessibilityState={{ selected: commentSort === s }}
                     style={{
                       paddingHorizontal: 11, paddingVertical: 5, borderRadius: 12,
@@ -798,7 +800,7 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
                     }}
                   >
                     <Text style={{ color: commentSort === s ? '#fff' : colors.muted, fontSize: 12 }}>
-                      {s === 'hot' ? '热门' : '最新'}
+                      {s === 'hot' ? tr('mobile.player.sortHot') : tr('mobile.player.sortNew')}
                     </Text>
                   </Pressable>
                 ))}
@@ -809,7 +811,7 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
                 <Text style={{ color: colors.accent, paddingHorizontal: 20, fontSize: 13 }}>{commentError}</Text>
               ) : !comments.length ? (
                 <Text style={{ color: colors.fainter, paddingHorizontal: 20, fontSize: 13 }}>
-                  {canComment ? '还没有评论' : '当前音源不提供评论，也没找到网易云同名歌曲'}
+                  {canComment ? tr('mobile.player.noComments') : tr('mobile.player.noCommentsSource')}
                 </Text>
               ) : (
                 <FlatList
@@ -825,15 +827,15 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
                       )}
                       <View style={{ flex: 1, minWidth: 0 }}>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                          <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 12, flexShrink: 1 }}>{cm.userName || '匿名用户'}</Text>
+                          <Text numberOfLines={1} style={{ color: colors.muted, fontSize: 12, flexShrink: 1 }}>{cm.userName || tr('mobile.player.anonymous')}</Text>
                           {cm.hot ? (
-                            <Text style={{ color: colors.accent, fontSize: 10, borderWidth: 1, borderColor: colors.accent, borderRadius: 3, paddingHorizontal: 3 }}>热评</Text>
+                            <Text style={{ color: colors.accent, fontSize: 10, borderWidth: 1, borderColor: colors.accent, borderRadius: 3, paddingHorizontal: 3 }}>{tr('pl.hot')}</Text>
                           ) : null}
                         </View>
                         <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', marginTop: 4 }}>
                           {parseCommentContent(cm.content).map((seg, si) =>
                             seg.type === 'image' ? (
-                              <Pressable key={si} onPress={safe('查看评论图片', () => Linking.openURL(seg.url))}>
+                              <Pressable key={si} onPress={safe(tr('mobile.player.viewCommentImage'), () => Linking.openURL(seg.url))}>
                                 <Image
                                   source={{ uri: seg.url }}
                                   style={{ width: 132, height: 132, borderRadius: 6, marginVertical: 4, marginRight: 4, backgroundColor: colors.elevated }}
@@ -849,7 +851,7 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
                         </View>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 5 }}>
                           {fmtCommentTime(cm.time) ? <Text style={{ color: colors.fainter, fontSize: 11 }}>{fmtCommentTime(cm.time)}</Text> : null}
-                          {fmtLikes(cm.likedCount) ? <Text style={{ color: colors.fainter, fontSize: 11 }}>赞 {fmtLikes(cm.likedCount)}</Text> : null}
+                          {fmtLikes(cm.likedCount) ? <Text style={{ color: colors.fainter, fontSize: 11 }}>{tf('mobile.player.likes', { n: fmtLikes(cm.likedCount) })}</Text> : null}
                         </View>
                       </View>
                     </View>
@@ -861,7 +863,7 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
                         disabled={commentLoading}
                         style={{ borderWidth: 1, borderColor: colors.divider, borderRadius: 10, paddingVertical: 9, alignItems: 'center', marginBottom: 12 }}
                       >
-                        <Text style={{ color: colors.muted, fontSize: 13 }}>{commentLoading ? '加载中…' : '查看更多评论'}</Text>
+                        <Text style={{ color: colors.muted, fontSize: 13 }}>{commentLoading ? tr('mobile.player.loading') : tr('mobile.player.moreComments')}</Text>
                       </Pressable>
                     ) : null
                   }
@@ -879,9 +881,9 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
               onPress={() => undefined}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 }}>
-                <Text style={{ color: colors.fg, fontSize: 15.5, fontWeight: '600' }}>播放速度</Text>
+                <Text style={{ color: colors.fg, fontSize: 15.5, fontWeight: '600' }}>{tr('mobile.player.speed')}</Text>
                 <Pressable onPress={() => setRateOpen(false)} hitSlop={10}>
-                  <Text style={{ color: colors.muted, fontSize: 14 }}>关闭</Text>
+                  <Text style={{ color: colors.muted, fontSize: 14 }}>{tr('common.close')}</Text>
                 </Pressable>
               </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 20 }}>
@@ -890,8 +892,8 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
                   return (
                     <Pressable
                       key={r}
-                      onPress={safe('调整播放速度', async () => { setRateOpen(false); await setRate(r) })}
-                      accessibilityLabel={`${fmtRate(r)} 播放`}
+                      onPress={safe(tr('mobile.player.adjustSpeed'), async () => { setRateOpen(false); await setRate(r) })}
+                      accessibilityLabel={tf('mobile.player.speedItem', { rate: fmtRate(r) })}
                       accessibilityState={{ selected: active }}
                       style={{
                         minWidth: 66, paddingVertical: 10, borderRadius: 12, alignItems: 'center',
@@ -906,7 +908,7 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
                 })}
               </View>
               <Text style={{ color: colors.fainter, fontSize: 12, paddingHorizontal: 20, paddingTop: 12, lineHeight: 18 }}>
-                变速不变调（ExoPlayer 的 PlaybackParameters 默认 pitch=1）。听播客/有声书时 1.25–1.5 倍最自然。
+                {tr('mobile.player.speedHint')}
               </Text>
             </Pressable>
           </Pressable>
@@ -919,34 +921,34 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
               onPress={() => undefined}
             >
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16 }}>
-                <Text style={{ color: colors.fg, fontSize: 15.5, fontWeight: '600' }}>定时暂停</Text>
+                <Text style={{ color: colors.fg, fontSize: 15.5, fontWeight: '600' }}>{tr('mobile.player.sleepTitle')}</Text>
                 <Pressable onPress={() => setSleepOpen(false)} hitSlop={10}>
-                  <Text style={{ color: colors.muted, fontSize: 14 }}>关闭</Text>
+                  <Text style={{ color: colors.muted, fontSize: 14 }}>{tr('common.close')}</Text>
                 </Pressable>
               </View>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10, paddingHorizontal: 20 }}>
                 {sleep.OPTIONS.map(m => (
                   <Pressable
                     key={m}
-                    onPress={safe('设置定时暂停', () => { sleep.start(m); setSleepOpen(false) })}
-                    accessibilityLabel={'定时暂停 ' + m + ' 分钟'}
+                    onPress={safe(tr('mobile.player.setSleep'), () => { sleep.start(m); setSleepOpen(false) })}
+                    accessibilityLabel={tf('mobile.player.sleepMinutesLabel', { n: m })}
                     style={{ minWidth: 66, paddingVertical: 10, borderRadius: 12, alignItems: 'center', backgroundColor: colors.elevated }}
                   >
-                    <Text style={{ color: colors.fg, fontSize: 14 }}>{m} 分钟</Text>
+                    <Text style={{ color: colors.fg, fontSize: 14 }}>{tf('mobile.player.sleepMinutes', { n: m })}</Text>
                   </Pressable>
                 ))}
               </View>
               {sleep.active ? (
                 <Pressable
-                  onPress={safe('取消定时暂停', () => { sleep.cancel(); setSleepOpen(false) })}
-                  accessibilityLabel="取消定时暂停"
+                  onPress={safe(tr('mobile.player.cancelSleep'), () => { sleep.cancel(); setSleepOpen(false) })}
+                  accessibilityLabel={tr('mobile.player.cancelSleep')}
                   style={{ marginHorizontal: 20, marginTop: 14, paddingVertical: 10, borderRadius: 12, alignItems: 'center', borderWidth: 1, borderColor: colors.divider }}
                 >
-                  <Text style={{ color: colors.accent, fontSize: 13 }}>取消定时（剩余 {sleep.label}）</Text>
+                  <Text style={{ color: colors.accent, fontSize: 13 }}>{tf('mobile.player.cancelSleepWith', { label: sleep.label })}</Text>
                 </Pressable>
               ) : null}
               <Text style={{ color: colors.fainter, fontSize: 12, paddingHorizontal: 20, paddingTop: 12, lineHeight: 18 }}>
-                到时间后暂停播放，不会切歌或清空播放列表；后台冻结后按真实时间校准。
+                {tr('mobile.player.sleepHint')}
               </Text>
             </Pressable>
           </Pressable>

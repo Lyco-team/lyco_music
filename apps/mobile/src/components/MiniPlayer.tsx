@@ -14,6 +14,7 @@ import { PauseIcon, PlayIcon, ListIcon } from './Icons'
 import { colors } from '../theme'
 import { currentItem, toggle, usePlayerState } from '../player'
 import { safe } from '../lib/safe'
+import { t as tr, useLocale } from '../lib/i18n'
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const DEFAULT_COVER = require('../assets/art/cover-default.jpg') as number
@@ -31,6 +32,7 @@ interface Props {
  */
 export default function MiniPlayer({ onOpen, onOpenQueue }: Props) {
   const st = usePlayerState()
+  useLocale()
   const item = currentItem()
 
   // 播放页展开/收起用透明度做一点点过场，避免生硬闪切
@@ -85,7 +87,7 @@ export default function MiniPlayer({ onOpen, onOpenQueue }: Props) {
         {/* 加载中就在暂停/播放之间显示一个小圈，避免用户以为按钮坏了 */}
         <Pressable
           hitSlop={8}
-          onPress={safe('迷你条播放暂停', () => toggle())}
+          onPress={safe(tr('mobile.mini.toggle'), () => toggle())}
           style={{ width: 38, height: 38, alignItems: 'center', justifyContent: 'center' }}
         >
           {st.loading ? (
@@ -104,7 +106,7 @@ export default function MiniPlayer({ onOpen, onOpenQueue }: Props) {
 
         <Pressable
           hitSlop={8}
-          onPress={safe('迷你条播放列表', () => onOpenQueue())}
+          onPress={safe(tr('mobile.mini.queue'), () => onOpenQueue())}
           style={{ width: 38, height: 38, alignItems: 'center', justifyContent: 'center' }}
         >
           <ListIcon size={18} color={colors.fg} />
