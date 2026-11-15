@@ -28,7 +28,7 @@ import { library } from '../sync'
 import { safe } from '../lib/safe'
 import Ambient, { useCoverColor } from '../components/Ambient'
 import {
-  clearQueue, currentItem, cycleMode, cycleQuality, modeLabel, next, play, prev, seek, setRate, toggle, retry,
+  clearQueue, currentItem, cycleMode, cycleQuality, next, play, prev, seek, setRate, toggle, retry,
   removeFromQueue,
   RATES, useLyricLines, usePlayerState, useProgressState,
 } from '../player'
@@ -664,7 +664,7 @@ export default function PlayerScreen({ visible, onClose }: { visible: boolean; o
             paddingHorizontal: 34, marginTop: 6, marginBottom: 4,
           }}
         >
-          <Pressable hitSlop={12} onPress={safe(tr('mobile.player.switchMode'), () => cycleMode())} accessibilityLabel={modeLabel()}>
+          <Pressable hitSlop={12} onPress={safe(tr('mobile.player.switchMode'), () => cycleMode())} accessibilityLabel={tf('mobile.player.modeLabel', { mode: tr('mobile.player.mode' + (st.mode.charAt(0).toUpperCase() + st.mode.slice(1))) })}>
             {st.mode === 'shuffle'
               ? <ShuffleIcon size={21} color={colors.muted} />
               : <LoopIcon size={21} single={st.mode === 'single'} color={colors.muted} />}

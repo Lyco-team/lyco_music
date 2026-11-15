@@ -19,6 +19,7 @@ export const LOCALES: { id: Locale; label: string; native: string }[] = [
 type Dict = Record<string, string>
 
 const ZH_CN: Dict = {
+
   'app.name': 'Lyco Music',
 
   'nav.recommend': '推荐',
@@ -406,9 +407,15 @@ const ZH_CN: Dict = {
   "mobile.error.hideDetail": "收起诊断信息",
   "mobile.error.showDetail": "查看诊断信息（截图发给开发者）",
   "mobile.error.noRecords": "暂无记录",
+  "mobile.player.modeOrder": "顺序播放",
+  "mobile.player.modeLabel": "切换播放模式：{mode}",
+  "mobile.player.modeLoop": "列表循环",
+  "mobile.player.modeSingle": "单曲循环",
+  "mobile.player.modeShuffle": "随机播放",
 }
 
 const EN_US: Dict = {
+
   'app.name': 'Lyco Music',
 
   'nav.recommend': 'For You',
@@ -796,9 +803,15 @@ const EN_US: Dict = {
   "mobile.error.hideDetail": "Hide diagnostics",
   "mobile.error.showDetail": "View diagnostics (send a screenshot to the developer)",
   "mobile.error.noRecords": "No records",
+  "mobile.player.modeOrder": "Sequential",
+  "mobile.player.modeLabel": "Switch play mode: {mode}",
+  "mobile.player.modeLoop": "List loop",
+  "mobile.player.modeSingle": "Single loop",
+  "mobile.player.modeShuffle": "Shuffle",
 }
 
 const KO_KR: Dict = {
+
   'app.name': 'Lyco Music',
 
   'nav.recommend': '추천',
@@ -1186,6 +1199,11 @@ const KO_KR: Dict = {
   "mobile.error.hideDetail": "진단 정보 접기",
   "mobile.error.showDetail": "진단 정보 보기 (개발자에게 스크린샷 전달)",
   "mobile.error.noRecords": "기록 없음",
+  "mobile.player.modeOrder": "순서 재생",
+  "mobile.player.modeLabel": "재생 모드 전환: {mode}",
+  "mobile.player.modeLoop": "목록 반복",
+  "mobile.player.modeSingle": "한 곡 반복",
+  "mobile.player.modeShuffle": "무작위 재생",
 }
 
 

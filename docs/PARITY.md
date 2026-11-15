@@ -33,7 +33,7 @@
 
 lx 实际拥有的能力 = 99 − 7（我们独有）= **92 项**。
 我们已对齐 = 91 + 1（部分）= **92 项**。
-**覆盖率 100%，缺口 0 项。**（7.4 多语言按「部分」计 —— 桌面 / 移动端 / 网页入口共用字典，页面内文案已逐页补齐；内部日志与播放模式 accessibilityLabel 仍有个别中文残留）
+**覆盖率 100%，缺口 0 项。**（7.4 多语言按「部分」计 —— 桌面 / 移动端 / 网页入口共用字典，页面内文案已逐页补齐；仅内部诊断日志仍保留中文，服务端数据不属界面文案）
 
 ## 搬运进度
 
@@ -190,7 +190,7 @@ lx 实际拥有的能力 = 99 − 7（我们独有）= **92 项**。
 | 7.1 | 浅色 / 深色主题 | 已 | 已 | |
 | 7.2 | 自定义主题编辑器 | 已 | 已 | 设置页取色器实时预览并持久化；进度条/次级强调色按主色混白 32% 自动推导（不做整块色板：结构色一改对比度就崩）。CDP 实测 #d43b52 → #1a73e8 生效并落盘 |
 | 7.3 | 界面字体大小（6 档） | 已 | 已 | 6 档整体缩放（CSS zoom；全站是 px 字面量，改根字号无效） |
-| 7.4 | 多语言（中/繁/英/韩） | 已 | 部分 | 字典抽到 `packages/core/src/i18n.ts` 桌面 / 移动端共用；桌面 `lib/i18n.ts` 薄适配 + 侧栏/顶栏/设置页，移动端账户页可切语言并持久化；四种语言可切。**zh-TW 由简体逐字转换**（与「歌词转繁体」同一张表），en/ko 手写。0.2.62 补齐移动端首页 / 搜索 / 我的音乐 / 账户首批高频文案与播放页 / 发现 / 好友 / 会员 / 同步 / 歌单结果 / 迷你条 / 错误边界共 8 个页面的剩余文案，网页只读入口 PWA 复用同一份字典；内部日志与播放模式 accessibilityLabel 仍有个别中文残留 |
+| 7.4 | 多语言（中/繁/英/韩） | 已 | 部分 | 字典抽到 `packages/core/src/i18n.ts` 桌面 / 移动端共用；桌面 `lib/i18n.ts` 薄适配 + 侧栏/顶栏/设置页，移动端账户页可切语言并持久化；四种语言可切。**zh-TW 由简体逐字转换**（与「歌词转繁体」同一张表），en/ko 手写。0.2.62 补齐移动端首页 / 搜索 / 我的音乐 / 账户首批高频文案与播放页 / 发现 / 好友 / 会员 / 同步 / 歌单结果 / 迷你条 / 错误边界共 8 个页面的剩余文案，网页只读入口 PWA 复用同一份字典；播放模式 accessibilityLabel 已改用共享字典 `mobile.player.modeLabel`，仅内部诊断日志仍保留中文 |
 | 7.5 | 窗口尺寸预设（6 档） | 已 | 已 | 迷你/标准/…；超出工作区自动夹回去并居中 |
 | 7.6 | 播放栏进度条样式（3 种） | 已 | 已 | 细线 / 粗条 / 圆点三档，悬停时放大；圆点样式常驻手柄 |
 | 7.7 | 内置圆角/阴影窗口 | 已 | 已 | 无边框 + `transparent` + 关掉系统 `hasShadow/roundedCorners`，圆角与阴影由 CSS 画（否则两层叠在一起） |
@@ -330,7 +330,7 @@ lx 实际拥有的能力 = 99 − 7（我们独有）= **92 项**。
 
 本地验收：双端 `tsc --noEmit`、`vitest run`（51 passed / 13 skipped，609 passed / 22 skipped）、移动端 jest 17 suites / 62 tests、桌面 `vite build` 全绿；CI 四 job（Packages / Web PWA / Desktop / Mobile）全 success。
 
-已知残留：`apps/mobile/src/screens/PlayerScreen.tsx` 的播放模式 accessibilityLabel 仍取 `apps/mobile/src/player.ts` 的中文 `modeLabel()`；不改它以免破坏 `player-mode.test.ts` 对 `列表循环` 的断言。内部诊断日志与服务端返回的榜单 / 套餐名不属界面文案。
+收尾：`apps/mobile/src/screens/PlayerScreen.tsx` 的播放模式 accessibilityLabel 改由共享字典 `mobile.player.modeLabel` + 四个 `mobile.player.mode*` 词生成，zh-CN 值逐字等于 `列表循环` 等原词；`apps/mobile/src/player.ts` 的 `modeLabel()` 保留给 `player-mode.test.ts`，但不再进入 UI。新增 `player-mode-label-locale.test.tsx` 覆盖中 / 英两语。内部诊断日志与服务端返回的榜单 / 套餐名不属界面文案。
 
 ## 工作量判断
 

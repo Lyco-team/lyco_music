@@ -57,6 +57,7 @@ describe('mobile page copy (shared dictionary, batch 2)', () => {
     'mobile.friends.needVipDesc', 'mobile.friends.shareMeta', 'mobile.member.errorOpenBrowser',
     'mobile.member.unavailable', 'mobile.sync.merged', 'mobile.sync.rule1',
     'mobile.mini.toggle', 'mobile.error.showDetail',
+    'mobile.player.modeLabel', 'mobile.player.modeLoop', 'mobile.player.modeShuffle',
   ]
 
   it('第二批移动端 key 四语都非空且不是 key 本身', () => {
@@ -78,6 +79,14 @@ describe('mobile page copy (shared dictionary, batch 2)', () => {
       expect(s, loc).toContain('2')
       expect(s, loc).not.toContain('{name}')
       expect(s, loc).not.toContain('{n}')
+    }
+  })
+
+  it('播放模式无障碍文案四语都插值成功', () => {
+    for (const loc of LOCALES) {
+      const label = translateFormat('mobile.player.modeLabel', loc, { mode: translate('mobile.player.modeLoop', loc) })
+      expect(label, loc).toContain(translate('mobile.player.modeLoop', loc))
+      expect(label, loc).not.toContain('{mode}')
     }
   })
 })
