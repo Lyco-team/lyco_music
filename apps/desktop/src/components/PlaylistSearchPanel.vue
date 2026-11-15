@@ -12,6 +12,7 @@
  * 只负责搜索与展示，点开详情交给父页面（emit open）。
  */
 import { computed, ref, watch } from 'vue'
+import { t, tf, locale } from '@/lib/i18n'
 import { Search, UserRound, X } from 'lucide-vue-next'
 import {
   searchWyPlaylists,
@@ -54,22 +55,23 @@ const counts = computed(() => {
 })
 
 const filterTabs = computed(() => [
-  { id: 'all' as const, label: '全部', count: counts.value.all },
-  { id: 'name' as const, label: '歌单名', count: counts.value.name },
-  { id: 'creator' as const, label: '创建者', count: counts.value.creator },
-  { id: 'other' as const, label: '相关推荐', count: counts.value.other },
+  { id: 'all' as const, label: t('search.all'), count: counts.value.all },
+  { id: 'name' as const, label: t('mobile.playlist.matchName'), count: counts.value.name },
+  { id: 'creator' as const, label: t('mobile.playlist.matchCreator'), count: counts.value.creator },
+  { id: 'other' as const, label: t('mobile.playlist.matchOther'), count: counts.value.other },
 ])
 
 function matchLabel(p: WyPlaylistBrief): string {
-  if (p.match === 'name') return '歌单名'
-  if (p.match === 'creator') return '创建者'
-  return '相关推荐'
+  if (p.match === 'name') return t('mobile.playlist.matchName')
+  if (p.match === 'creator') return t('mobile.playlist.matchCreator')
+  return t('mobile.playlist.matchOther')
 }
 
 function fmtPlayCount(n: number): string {
   if (!Number.isFinite(n) || n <= 0) return ''
-  if (n >= 1e8) return (n / 1e8).toFixed(1) + ' 亿'
-  if (n >= 1e4) return Math.round(n / 1e4) + ' 万'
+  const en = locale.value === 'en-US'
+  if (n >= 1e8) return tf('desktop.playlist.billion', { n: en ? Math.round(n / 1e6) : (n / 1e8).toFixed(1) })
+  if (n >= 1e4) return tf('desktop.playlist.tenThousand', { n: en ? Math.round(n / 1e3) : Math.round(n / 1e4) })
   return String(n)
 }
 
@@ -115,7 +117,7 @@ async function onlyCreator(name: string): Promise<void> {
     emit('result', r.total)
     creatorOnly.value = true
     creatorName.value = r.creator || q
-    if (!r.list.length) error.value = '没找到这个创建者的公开歌单'
+    if (!r.list.length) error.value = t('desktop.playlist.noCreatorPlaylists')
   } catch (e) {
     error.value = e instanceof Error ? e.message : String(e)
     playlists.value = []
@@ -143,7 +145,7 @@ watch(() => props.initialKeyword, v => {
         v-model="keyword"
         type="search"
         spellcheck="false"
-        placeholder="搜歌单，例如「通勤」「爵士」「周杰伦」"
+        :placeholder="t('desktop.playlist.placeholder')"
         class="min-w-[260px] flex-1 rounded-[8px] border border-ncm-divider bg-ncm-bg px-3 py-1.5 text-[13px] text-ncm-fg outline-none placeholder:text-ncm-fainter focus:border-ncm-accent"
         @keydown.enter.prevent="runSearch()"
       />
@@ -153,7 +155,7 @@ watch(() => props.initialKeyword, v => {
         :disabled="busy || !keyword.trim()"
         @click="runSearch()"
       >
-        <Search :size="14" aria-hidden="true" />{{ busy ? '搜索中…' : '搜索歌单' }}
+        <Search :size="14" aria-hidden="true" />{{ busy ? t('search.loading') : t('desktop.playlist.searchButton') }}
       </button>
     </div>
 
@@ -176,25 +178,25 @@ watch(() => props.initialKeyword, v => {
         type="button"
         class="flex items-center gap-1 rounded-pill border border-ncm-divider px-3 py-1 text-[12px] text-ncm-muted hover:bg-black/5"
         @click="backToKeyword"
-      ><X :size="12" aria-hidden="true" />返回关键词搜索</button>
+      ><X :size="12" aria-hidden="true" />{{ t('mobile.playlist.backToKeyword') }}</button>
       <button
         v-else-if="keyword.trim()"
         type="button"
         class="flex items-center gap-1 rounded-pill border border-ncm-divider px-3 py-1 text-[12px] text-ncm-muted hover:bg-black/5 disabled:opacity-40"
         :disabled="busy"
         @click="onlyCreator(keyword)"
-      ><UserRound :size="12" aria-hidden="true" />只看同名创建者</button>
+      ><UserRound :size="12" aria-hidden="true" />{{ t('mobile.playlist.onlySameCreator') }}</button>
     </div>
 
     <p v-if="creatorOnly && playlists.length" class="mb-2 text-[12px] text-ncm-faint">
-      只看创建者「{{ creatorName }}」：共 {{ total }} 张自建歌单（已排除 TA 收藏的别人的歌单）
+      {{ tf('mobile.playlist.creatorOnly', { name: creatorName, total }) }}
     </p>
     <p v-else-if="searched && !busy && playlists.length" class="mb-2 text-[12px] text-ncm-faint">
-      共 {{ total }} 个歌单，显示前 {{ playlists.length }} 个 · 网易云会同时匹配歌单名和创建者昵称，标签按本次关键词归类
+      {{ tf('desktop.playlist.totalHint', { total, n: playlists.length }) }}
     </p>
     <p v-if="error" class="mb-3 text-[14px] text-ncm-accent">{{ error }}</p>
-    <p v-else-if="searched && !busy && !playlists.length" class="mb-3 text-[14px] text-ncm-faint">没有找到相关歌单</p>
-    <p v-else-if="auto && busy" class="mb-3 text-[14px] text-ncm-faint">搜索歌单中…</p>
+    <p v-else-if="searched && !busy && !playlists.length" class="mb-3 text-[14px] text-ncm-faint">{{ t('mobile.playlist.empty') }}</p>
+    <p v-else-if="auto && busy" class="mb-3 text-[14px] text-ncm-faint">{{ t('desktop.playlist.searchingPlaylists') }}</p>
 
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
       <div v-for="item in filtered" :key="item.id" class="group">
@@ -218,7 +220,7 @@ watch(() => props.initialKeyword, v => {
             >{{ fmtPlayCount(item.playCount) }}</span>
           </div>
           <p class="mt-2 line-clamp-2 text-[13px] leading-[18px] text-ncm-fg">{{ item.name }}</p>
-          <p class="mt-0.5 truncate text-[11px] text-ncm-faint">{{ item.trackCount }} 首 · {{ item.creator }}</p>
+          <p class="mt-0.5 truncate text-[11px] text-ncm-faint">{{ tf('mobile.playlist.tracksByCreator', { n: item.trackCount, creator: item.creator }) }}</p>
         </button>
         <div class="mt-1 flex flex-wrap items-center gap-1.5">
           <span
@@ -232,13 +234,13 @@ watch(() => props.initialKeyword, v => {
             type="button"
             class="text-[10px] text-ncm-faint underline decoration-dotted hover:text-ncm-accent"
             @click="onlyCreator(item.creator)"
-          >只看 TA 的歌单</button>
+          >{{ t('mobile.playlist.onlyTheirPlaylists') }}</button>
         </div>
       </div>
     </div>
 
     <div v-if="!searched && !auto" class="mt-8 flex flex-col items-center text-ncm-fainter">
-      <p class="text-[13px]">输入关键词后回车，搜的是歌单而不是单曲</p>
+      <p class="text-[13px]">{{ t('desktop.playlist.initialHint') }}</p>
     </div>
   </div>
 </template>

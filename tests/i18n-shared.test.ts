@@ -90,3 +90,44 @@ describe('mobile page copy (shared dictionary, batch 2)', () => {
     }
   })
 })
+
+describe('desktop page copy (shared dictionary, batch 3)', () => {
+  const NEW_KEYS = [
+    'desktop.playlist.placeholder', 'desktop.playlist.searchButton', 'desktop.playlist.totalHint',
+    'desktop.playlist.billion', 'desktop.playlist.tenThousand',
+    'desktop.hotkey.playPause', 'desktop.hotkey.unbound', 'desktop.hotkey.alreadyBound',
+    'desktop.hotkey.note', 'desktop.hotkey.pressNew', 'desktop.hotkey.restored',
+  ]
+
+  it('第三批桌面 key 四语都非空且不是 key 本身', () => {
+    for (const key of NEW_KEYS) {
+      expect(TRANSLATION_KEYS).toContain(key)
+      for (const loc of LOCALES) {
+        const value = translate(key, loc)
+        expect(value, key + ' / ' + loc).toBeTruthy()
+        expect(value, key + ' / ' + loc).not.toBe(key)
+      }
+    }
+  })
+
+  it('桌面插值文案四语都替换掉占位符', () => {
+    for (const loc of LOCALES) {
+      const a = translateFormat('desktop.hotkey.alreadyBound', loc, { combo: 'Ctrl+K', label: 'X' })
+      expect(a, loc).toContain('X')
+      expect(a, loc).not.toContain('{combo}')
+      expect(a, loc).not.toContain('{label}')
+      const b = translateFormat('desktop.playlist.totalHint', loc, { total: 462, n: 24 })
+      expect(b, loc).not.toContain('{total}')
+      expect(b, loc).not.toContain('{n}')
+      expect(translateFormat('desktop.playlist.billion', loc, { n: 2 }), loc).not.toContain('{n}')
+    }
+  })
+
+  it('zh-CN 默认值逐字等于桌面原中文', () => {
+    expect(translate('desktop.hotkey.playPause', 'zh-CN')).toBe('播放 / 暂停')
+    expect(translate('desktop.hotkey.unbound', 'zh-CN')).toBe('未绑定')
+    expect(translate('desktop.playlist.placeholder', 'zh-CN')).toBe('搜歌单，例如「通勤」「爵士」「周杰伦」')
+    expect(translate('desktop.playlist.billion', 'zh-CN')).toBe('{n} 亿')
+    expect(translate('desktop.playlist.tenThousand', 'zh-CN')).toBe('{n} 万')
+  })
+})

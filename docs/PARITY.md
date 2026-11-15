@@ -332,6 +332,16 @@ lx 实际拥有的能力 = 99 − 7（我们独有）= **92 项**。
 
 收尾：`apps/mobile/src/screens/PlayerScreen.tsx` 的播放模式 accessibilityLabel 改由共享字典 `mobile.player.modeLabel` + 四个 `mobile.player.mode*` 词生成，zh-CN 值逐字等于 `列表循环` 等原词；`apps/mobile/src/player.ts` 的 `modeLabel()` 保留给 `player-mode.test.ts`，但不再进入 UI。新增 `player-mode-label-locale.test.tsx` 覆盖中 / 英两语。内部诊断日志与服务端返回的榜单 / 套餐名不属界面文案。
 
+## 0.2.62 桌面端歌单搜索 / 快捷键文案接字典（批次 3，2026-11-15）
+
+| 反馈 / 目标 | 处理 | 落点 / 验收 |
+| --- | --- | --- |
+| 桌面歌单搜索面板切英 / 韩后仍是中文 | 复用 `mobile.playlist.*` / `search.*` 现有 key，桌面独有 8 串新增 `desktop.playlist.*`（简 / 英 / 韩三语，繁体逐字转换）；英文播放量沿用移动端量级修正（2.3 亿 → 230M，而不是 2.3M） | `components/PlaylistSearchPanel.vue`、`packages/core/src/i18n.ts` |
+| 快捷键动作名 / 组合键 / 设置页提示仍是中文 | `HOTKEY_ACTIONS` 的 `label` 改存字典 key（`labelKey`），`comboLabel` 的未绑定 / 空格 / 退格 / 回车走 `t()`（保持纯函数签名），设置页标题 / 说明 / toast / a11y title 全接 `t()` / `tf()`；新增 23 个 `desktop.hotkey.*` | `lib/hotkeys.ts`、`components/settings/HotkeySettings.vue` |
+| 默认中文回归不能破 | 字典 zh 值逐字等于原中文，桌面无既有中文断言；新增共享字典用例覆盖四语非空 / 插值 / zh-CN 逐字 | `tests/i18n-shared.test.ts`；双端 `tsc`、vitest、移动端 jest、桌面 `vite build` 全绿 |
+
+后续批次：`PlayBar.vue`、`DesktopLyric.vue`、`PrefsSettings.vue` 与 `prefs.ts` / `theme.ts` 的窗口 / 字体 / 主题 / 皮肤预设名等播放栏与设置页长文案。
+
 ## 工作量判断
 
 | 层 | 项数 | 单项成本 | 小计 |

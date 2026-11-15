@@ -12,23 +12,24 @@
  */
 import { usePlayer } from './player'
 import { prefs, DEFAULT_SHORTCUTS } from './prefs'
+import { t } from './i18n'
 
 const SEEK_STEP = 5
 const VOLUME_STEP = 0.05
 
 /** 可以绑定的动作（设置页按这个列表渲染） */
-export const HOTKEY_ACTIONS: { id: string; label: string }[] = [
-  { id: 'play-pause', label: '播放 / 暂停' },
-  { id: 'prev', label: '上一首' },
-  { id: 'next', label: '下一首' },
-  { id: 'seek-back', label: '快退 5 秒' },
-  { id: 'seek-forward', label: '快进 5 秒' },
-  { id: 'volume-up', label: '音量 +' },
-  { id: 'volume-down', label: '音量 −' },
-  { id: 'mute', label: '静音开关' },
-  { id: 'favorite', label: '收藏 / 取消收藏' },
-  { id: 'lyric', label: '桌面歌词开关' },
-  { id: 'search', label: '聚焦搜索框' },
+export const HOTKEY_ACTIONS: { id: string; labelKey: string }[] = [
+  { id: 'play-pause', labelKey: 'desktop.hotkey.playPause' },
+  { id: 'prev', labelKey: 'desktop.hotkey.prev' },
+  { id: 'next', labelKey: 'desktop.hotkey.next' },
+  { id: 'seek-back', labelKey: 'desktop.hotkey.seekBack' },
+  { id: 'seek-forward', labelKey: 'desktop.hotkey.seekForward' },
+  { id: 'volume-up', labelKey: 'desktop.hotkey.volumeUp' },
+  { id: 'volume-down', labelKey: 'desktop.hotkey.volumeDown' },
+  { id: 'mute', labelKey: 'desktop.hotkey.mute' },
+  { id: 'favorite', labelKey: 'desktop.hotkey.favorite' },
+  { id: 'lyric', labelKey: 'desktop.hotkey.lyric' },
+  { id: 'search', labelKey: 'desktop.hotkey.search' },
 ]
 
 /** 焦点在可输入元素里时不要抢键 */
@@ -60,21 +61,21 @@ export function comboFromEvent(e: KeyboardEvent): string {
 
 /** 给界面看的可读文本：Ctrl+KeyK → Ctrl + K */
 export function comboLabel(combo: string): string {
-  if (!combo) return '未绑定'
+  if (!combo) return t('desktop.hotkey.unbound')
   return combo
     .split('+')
     .map(p => {
       if (p === 'Ctrl' || p === 'Shift' || p === 'Alt') return p
       if (p.startsWith('Key')) return p.slice(3)
       if (p.startsWith('Digit')) return p.slice(5)
-      if (p === 'Space') return '空格'
+      if (p === 'Space') return t('desktop.hotkey.space')
       if (p === 'ArrowLeft') return '←'
       if (p === 'ArrowRight') return '→'
       if (p === 'ArrowUp') return '↑'
       if (p === 'ArrowDown') return '↓'
       if (p === 'Escape') return 'Esc'
-      if (p === 'Backspace') return '退格'
-      if (p === 'Enter') return '回车'
+      if (p === 'Backspace') return t('desktop.hotkey.backspace')
+      if (p === 'Enter') return t('desktop.hotkey.enter')
       return p
     })
     .join(' + ')
