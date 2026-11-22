@@ -19,7 +19,8 @@
     "bump": "node scripts/bump-version.mjs",
     "probe:download": "electron scripts/probe-download.cjs",
     "pwa:build": "node scripts/build-lyco-pwa.mjs",
-    "pwa:check": "python3 scripts/check-lyco-pwa.py ."
+    "pwa:check": "python3 scripts/check-lyco-pwa.py .",
+    "test:ui-parity": "vitest run tests/desktop-ui-parity.test.ts"
   },
   "devDependencies": {
     "@types/node": "^20.19.43",
