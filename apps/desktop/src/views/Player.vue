@@ -1007,17 +1007,17 @@ function playFromQueue(i: number): void {
     <!-- 主体：左黑胶 / 右信息歌词 -->
     <div class="flex h-full pt-[72px] pb-[102px]">
       <!-- ============ 左侧黑胶区 (x=0~930) ============ -->
-      <div class="relative flex w-[820px] shrink-0 items-center justify-center">
+      <div class="relative flex w-[1036px] shrink-0 items-center justify-center">
         <!-- 黑胶：外径 574px，中心略偏右下 -->
         <div
-          class="relative size-[520px] rounded-full transition-transform duration-[3000ms]"
+          class="relative size-[574px] translate-y-[19px] rounded-full transition-transform duration-[3000ms]"
           :class="spinning ? 'animate-[spin_20s_linear_infinite]' : ''"
           :style="vinylStyle"
         >
           <!-- 内圈白色粗环 + 中心专辑图 316px -->
           <div class="absolute inset-0 flex items-center justify-center">
-            <div class="flex size-[308px] items-center justify-center rounded-full bg-ncmd-vinyl-ring">
-              <div class="relative size-[286px] overflow-hidden rounded-full bg-gradient-to-br from-[#3a3a3a] to-[#141414]">
+            <div class="flex size-[344px] items-center justify-center rounded-full bg-ncmd-vinyl-ring">
+              <div class="relative size-[316px] overflow-hidden rounded-full bg-gradient-to-br from-[#3a3a3a] to-[#141414]">
                 <img
                   v-if="cover"
                   :src="cover"
@@ -1040,12 +1040,12 @@ function playFromQueue(i: number): void {
         </div>
 
         <!-- 唱针：转轴 (518,189)，针头 (776,307) -->
-        <div class="pointer-events-none absolute left-1/2 top-[70px] -translate-x-1/2">
+        <div class="pointer-events-none absolute left-1/2 top-[90px] -translate-x-1/2">
           <div class="relative">
             <!-- 转轴底座 -->
             <div class="size-[54px] rounded-full bg-[#0a0a0a] shadow-[0_6px_16px_rgba(0,0,0,.5)]" />
             <!-- 白色机械臂 -->
-            <div class="absolute left-[24px] top-[24px] h-[12px] w-[280px] origin-left rotate-[23deg] rounded-full bg-[#f2f2f2] shadow-[0_4px_10px_rgba(0,0,0,.4)]">
+            <div class="absolute left-[24px] top-[24px] h-[12px] w-[260px] origin-left rotate-[26deg] rounded-full bg-[#f2f2f2] shadow-[0_4px_10px_rgba(0,0,0,.4)]">
               <!-- 针头 -->
               <div class="absolute right-[-6px] top-[-4px] size-[20px] rounded-[4px] bg-[#e8e8e8]" />
             </div>
@@ -1067,7 +1067,7 @@ function playFromQueue(i: number): void {
       </div>
 
       <!-- ============ 右侧信息 + 歌词区 (x=1005 起) ============ -->
-      <div class="flex min-h-0 min-w-0 flex-1 flex-col pt-[25px]">
+      <div class="-ml-[31px] flex min-h-0 min-w-0 flex-1 flex-col pt-[25px]">
         <!-- 歌名行：34~36px，后跟音源 / 音质小标签 -->
         <div class="flex items-center gap-2">
           <h1 class="truncate text-[35px] leading-[44px] text-ncmd-fg">{{ title }}</h1>

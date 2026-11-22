@@ -500,7 +500,7 @@ const dotAlways = computed(() => prefs.progressStyle === 'dot')
     </div>
 
     <!-- 左侧歌曲信息：左边距 50px -->
-    <div class="flex w-[430px] shrink-0 items-center gap-4 pl-[28px]">
+    <div class="flex w-[430px] shrink-0 items-center gap-4 pl-[49px]">
       <!-- 封面：网易云底部是一直有图的，点图进播放页 -->
       <button
         type="button"
@@ -549,16 +549,16 @@ const dotAlways = computed(() => prefs.progressStyle === 'dot')
         <template #default="{ size, stroke }"><SkipBack :size="size" :stroke-width="stroke" aria-hidden="true" /></template>
       </IconButton>
 
-      <!-- 播放/暂停：40px 圆形主按钮（网易云底栏就是这个量级） -->
+      <!-- 播放/暂停：52px 圆形主按钮（对齐实测底栏规格） -->
       <button
         type="button"
-        class="mx-1 flex size-[40px] shrink-0 items-center justify-center rounded-full bg-ncm-accent-play text-white transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40"
+        class="mx-1 flex size-[52px] shrink-0 items-center justify-center rounded-full bg-ncm-accent-play text-white transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40"
         :aria-label="playing ? tr('暂停') : tr('播放')"
         :disabled="!track"
         @click="player.toggle()"
       >
-        <Pause v-if="playing" :size="20" :stroke-width="0" fill="currentColor" aria-hidden="true" />
-        <Play v-else :size="20" :stroke-width="0" fill="currentColor" class="translate-x-[1px]" aria-hidden="true" />
+        <Pause v-if="playing" :size="24" :stroke-width="0" fill="currentColor" aria-hidden="true" />
+        <Play v-else :size="24" :stroke-width="0" fill="currentColor" class="translate-x-[1px]" aria-hidden="true" />
       </button>
 
       <IconButton :label="tr('下一首')" size="2xl" :disabled="!player.state.queue.length" @click="player.next()">

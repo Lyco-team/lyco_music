@@ -99,6 +99,15 @@ body {
   border-radius: 3px;
 }
 
+/* 卡片横排保留横向滚动能力，但不显示滚动条，避免破坏参考图的干净边缘 */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 /*
  * 桌面歌词窗口：整个文档必须透明。
  * 用 html 上的 data 属性区分 —— 主窗口绝不能透明（否则白底组件会透出桌面）。

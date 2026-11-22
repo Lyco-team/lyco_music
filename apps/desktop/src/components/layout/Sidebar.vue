@@ -67,14 +67,14 @@ function selected(item: NavItem) {
   if (item.route && route.path === item.route) return true
   return !!item.query && route.name === 'search' && route.query.q === item.query
 }
-const rowClass = 'mx-4 flex h-11 w-[calc(100%-2rem)] shrink-0 items-center gap-3 rounded-xl px-4 text-left text-[15px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ncm-accent'
+const rowClass = 'ml-[30px] flex h-[47px] w-[206px] shrink-0 items-center gap-3 rounded-nav px-4 text-left text-[15px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ncm-accent'
 </script>
 
 <template>
   <aside class="flex h-full flex-col overflow-y-auto border-r border-ncm-divider bg-ncm-sidebar">
     <div class="flex items-center gap-3 px-6 pb-5 pt-7">
-      <span class="flex size-10 items-center justify-center rounded-full bg-ncm-accent text-white">
-        <Disc3 :size="24" :stroke-width="1.8" />
+      <span class="flex size-[35px] items-center justify-center rounded-full bg-ncm-accent text-white">
+        <Disc3 :size="20" :stroke-width="1.8" />
       </span>
       <span class="text-[22px] font-semibold tracking-tight text-ncm-fg">Lyco Music</span>
     </div>
@@ -121,10 +121,12 @@ const rowClass = 'mx-4 flex h-11 w-[calc(100%-2rem)] shrink-0 items-center gap-3
     </div>
     <p v-if="!playlists.length" class="px-7 pb-6 text-xs text-ncm-fainter">{{ t('sidebar.empty') }}</p>
     <button v-for="pl in playlists" :key="pl.id" type="button"
-            class="mx-4 flex min-h-11 items-center gap-3 rounded-lg px-4 text-left text-sm transition-colors"
+            class="ml-[30px] flex min-h-[57px] w-[206px] items-center gap-3 rounded-nav px-3 text-left text-sm transition-colors"
             :class="route.query.pl === pl.id ? 'bg-ncm-accent-nav text-white' : 'text-ncm-muted hover:bg-black/5'"
             @click="router.push({ path: '/my', query: { pl: pl.id } })">
-      <ListMusic :size="16" :stroke-width="1.8" class="shrink-0" aria-hidden="true" />
+      <span class="flex size-10 shrink-0 items-center justify-center rounded-[4px] bg-gradient-to-br from-ncm-accent/70 to-[#5c6da8] text-white">
+        <ListMusic :size="18" :stroke-width="1.8" aria-hidden="true" />
+      </span>
       <span class="min-w-0 flex-1 truncate">{{ pl.name }}</span>
       <span class="shrink-0 text-[11px] opacity-60">{{ pl.items.length }}</span>
     </button>

@@ -103,7 +103,7 @@ function onSearchKeydown(e: KeyboardEvent): void {
   <header class="flex min-w-0 items-center gap-2 border-b border-ncm-divider bg-ncm-topbar pl-6 pr-1 [app-region:drag]">
     <button
       type="button"
-      class="flex size-10 shrink-0 items-center justify-center rounded-xl border border-ncm-divider text-ncm-faint transition-colors hover:bg-white hover:text-ncm-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ncm-accent [app-region:no-drag]"
+      class="flex h-[44px] w-[34px] shrink-0 items-center justify-center rounded-search border border-ncm-divider text-ncm-faint transition-colors hover:bg-white hover:text-ncm-fg focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ncm-accent [app-region:no-drag]"
       :aria-label="t('返回上一页')"
       @click="router.back()"
     >
@@ -112,7 +112,7 @@ function onSearchKeydown(e: KeyboardEvent): void {
 
     <div
       ref="searchBox"
-      class="relative flex h-11 min-w-[160px] max-w-[430px] flex-1 items-center gap-3 rounded-xl border border-ncm-divider bg-white px-4 focus-within:border-ncm-accent [app-region:no-drag]"
+      class="relative flex h-[45px] min-w-[160px] max-w-[324px] flex-1 items-center gap-3 rounded-search border border-ncm-divider bg-white px-4 focus-within:border-ncm-accent [app-region:no-drag]"
     >
       <Search :size="18" :stroke-width="1.8" class="shrink-0 text-ncm-faint" aria-hidden="true" />
       <input
@@ -133,7 +133,7 @@ function onSearchKeydown(e: KeyboardEvent): void {
       <div
         v-if="historyOpen && visibleHistory.length"
         id="topbar-search-history"
-        class="absolute left-0 right-0 top-[48px] z-50 max-h-[320px] overflow-y-auto rounded-xl border border-ncm-divider bg-white py-1 shadow-xl [app-region:no-drag]"
+        class="absolute left-0 right-0 top-[50px] z-50 max-h-[320px] overflow-y-auto rounded-search border border-ncm-divider bg-white py-1 shadow-xl [app-region:no-drag]"
         role="listbox"
         :aria-label="t('搜索历史')"
       >
@@ -173,7 +173,7 @@ function onSearchKeydown(e: KeyboardEvent): void {
       type="button"
       disabled
       :title="t('语音搜索暂未开放')"
-      class="flex size-10 shrink-0 cursor-not-allowed items-center justify-center rounded-xl border border-ncm-divider text-ncm-faint opacity-55 [app-region:no-drag]"
+      class="flex h-[45px] w-[45px] shrink-0 cursor-not-allowed items-center justify-center rounded-search border border-ncm-divider text-ncm-faint opacity-55 [app-region:no-drag]"
       :aria-label="t('语音搜索暂未开放')"
     >
       <Mic :size="20" :stroke-width="1.8" aria-hidden="true" />
