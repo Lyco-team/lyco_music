@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import {
   AlertTriangle, Apple, ArrowUpRight, BookOpen, Check, ChevronLeft, ChevronRight,
   Download, ExternalLink, Filter, Github, Globe, HardDrive, HelpCircle, Info,
-  Laptop, Loader2, Search, ShieldCheck, Smartphone, Sparkles, Terminal, X,
+  Laptop, Loader2, MonitorCog, Search, ShieldAlert, ShieldCheck, Smartphone, Sparkles, Terminal, X,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +26,84 @@ const PLATFORM_ICONS: Record<string, typeof Laptop> = {
   windows: Laptop, macos: Apple, ios: Smartphone, android: Smartphone, linux: Terminal,
   unknown: HelpCircle,
 }
+type HelpGroup = { os: string; arch: string[]; platforms: string[]; picks: string[]; checks: string[] }
+
+const HELP_GROUPS: HelpGroup[] = [
+  {
+    os: 'Windows', arch: ['x86_64', 'arm64'], platforms: ['windows-x64', 'windows-arm64', 'windows-x86'],
+    picks: ['RustDesk：Windows x86_64 免安装 zip / msi', 'ToDesk：Windows x64 安装包', '向日葵：Windows x64 安装包'],
+    checks: ['确认 32/64 位与 ARM 版本，别装错', '首次运行允许屏幕录制与输入控制权限'],
+  },
+  {
+    os: 'macOS', arch: ['arm64', 'x86_64'], platforms: ['macos-arm64', 'macos-x64'],
+    picks: ['RustDesk：macOS universal dmg', 'TeamViewer：macOS dmg'],
+    checks: ['Apple Silicon 优先 arm64，Intel 机器用 Rosetta 或 x86_64 包', '系统设置里授予「辅助功能」与「屏幕录制」'],
+  },
+  {
+    os: 'Linux', arch: ['x86_64', 'aarch64'], platforms: ['linux-x64', 'linux-arm64', 'linux-x64-musl', 'linux-arm64-musl'],
+    picks: ['RustDesk：AppImage / deb', 'TeamViewer：官方 Linux 子页（按 UA 自动落页）'],
+    checks: ['确认 glibc / musl（Alpine 用静态构建）', 'Wayland 下远程控制能力受限，必要时切 X11'],
+  },
+  {
+    os: 'Android / iOS', arch: ['arm64'], platforms: ['android-arm64', 'ios-arm64'],
+    picks: ['RustDesk：移动端官方商店包', 'ToDesk：移动端官方商店包'],
+    checks: ['移动端只做被控/旁观，输入控制能力有限', '只从官方应用商店安装'],
+  },
+]
+
+const HELP_PLATFORM_OPTIONS = [
+  { value: 'all', label: '全部平台（先手动选）' },
+  { value: 'windows-x64', label: 'Windows x64' },
+  { value: 'windows-arm64', label: 'Windows ARM64' },
+  { value: 'windows-x86', label: 'Windows x86' },
+  { value: 'macos-x64', label: 'macOS Intel' },
+  { value: 'macos-arm64', label: 'macOS Apple Silicon' },
+  { value: 'linux-x64', label: 'Linux x64' },
+  { value: 'linux-arm64', label: 'Linux ARM64' },
+  { value: 'linux-x64-musl', label: 'Linux x64 (musl)' },
+  { value: 'linux-arm64-musl', label: 'Linux ARM64 (musl)' },
+  { value: 'android-arm64', label: 'Android ARM64' },
+  { value: 'ios-arm64', label: 'iPhone / iPad (ARM64)' },
+]
+
+const HELP_VALUE_BY_DEVICE: Record<Platform, string> = {
+  windows: 'windows-x64', macos: 'macos-arm64', ios: 'ios-arm64',
+  android: 'android-arm64', linux: 'linux-x64', unknown: 'all',
+}
+
+const REMOTE_TOOLS: { id: string; name: string; url: string; note: string }[] = [
+  { id: 'rustdesk', name: 'RustDesk', url: 'https://rustdesk.com/', note: '开源、可自建中继；官方唯一域名 rustdesk.com' },
+  { id: 'teamviewer', name: 'TeamViewer', url: 'https://www.teamviewer.com/en/download/', note: '商业远程支持；下载页会按系统 UA 自动跳转对应版本' },
+  { id: 'anydesk', name: 'AnyDesk', url: 'https://anydesk.com/', note: '商业远程桌面；请从官方域名下载' },
+  { id: 'todesk', name: 'ToDesk', url: 'https://www.todesk.com/', note: '国内常用远程工具；请从官方域名下载' },
+  { id: 'sunlogin', name: '向日葵', url: 'https://sunlogin.oray.com/', note: '国内常用远程工具；请从官方域名下载' },
+]
+
+const HELP_NOTICE = '识别结果只是浏览器给出的猜测，可手动修正；仅保存非敏感的机器/环境信息。请勿填写密码、API key、token、远程 ID、设备 ID、验证码；正式会话凭据请通过可信渠道单独提供。不采集精确位置、不调用地理定位 API，城市/区域仅由发布者手动填写。'
+
+function detectHelpPlatform(): string {
+  if (typeof navigator === 'undefined') return 'all'
+  const nav = navigator as Navigator & { userAgentData?: { platform?: string; architecture?: string; bitness?: string }; platform?: string }
+  const ua = (navigator.userAgent || '').toLowerCase()
+  const platform = (nav.userAgentData?.platform || nav.platform || '').toLowerCase()
+  const arch = (nav.userAgentData?.architecture || '').toLowerCase()
+  const isArm = /arm|aarch64/.test(arch) || /arm64|aarch64|apple silicon/.test(ua) || (/macintosh/.test(ua) && /arm/.test(platform))
+  if (/iphone|ipad|ipod/.test(ua) || (/macintosh/.test(ua) && (navigator.maxTouchPoints || 0) > 1)) return 'ios-arm64'
+  if (/android/.test(ua) || /android/.test(platform)) return 'android-arm64'
+  if (/windows|win32|win64/.test(ua) || /win/.test(platform)) return isArm ? 'windows-arm64' : 'windows-x64'
+  if (/macintosh|mac os|darwin|macintel/.test(ua) || /mac/.test(platform)) return isArm ? 'macos-arm64' : 'macos-x64'
+  if (/linux|x11|cros|ubuntu|fedora/.test(ua) || /linux/.test(platform)) return isArm ? 'linux-arm64' : 'linux-x64'
+  return 'all'
+}
+
+function helpGroup(value: string): HelpGroup | null {
+  return HELP_GROUPS.find((g) => g.platforms.includes(value)) || null
+}
+
+function optionLabel(value: string): string {
+  return HELP_PLATFORM_OPTIONS.find((o) => o.value === value)?.label || '全部平台'
+}
+
 
 function getToken() {
   try { return localStorage.getItem(DL_KEY) || '' } catch { return '' }
@@ -243,6 +321,8 @@ export default function App() {
   const [busySlug, setBusySlug] = useState('')
   const [page, setPage] = useState(0)
   const [device, setDevice] = useState<Platform>(() => detectDevice())
+  const [detectedHelpPlatform] = useState<string>(() => detectHelpPlatform())
+  const [helpPlatform, setHelpPlatform] = useState<string>(detectedHelpPlatform)
   const [deviceOpen, setDeviceOpen] = useState(false)
   const [glossaryOpen, setGlossaryOpen] = useState(false)
   const [detail, setDetail] = useState<Item | null>(null)
@@ -385,6 +465,7 @@ export default function App() {
 
   function chooseDevice(p: Platform) {
     setDevice(p)
+    setHelpPlatform(HELP_VALUE_BY_DEVICE[p])
     try { sessionStorage.setItem(DEVICE_SEEN_KEY, '1') } catch { /* ignore */ }
   }
 
@@ -413,6 +494,7 @@ export default function App() {
           <div className="flex flex-wrap gap-2">
             <Button variant="brand" size="sm" onClick={() => setDeviceOpen(true)}><Smartphone />帮我选安装包</Button>
             <Button variant="secondary" size="sm" onClick={() => setGlossaryOpen(true)}><HelpCircle />EXE / APK 是什么</Button>
+            <Button variant="secondary" size="sm" asChild><a href="#machine-help"><MonitorCog />远程工具帮助</a></Button>
           </div>
         </div>
 
@@ -425,6 +507,74 @@ export default function App() {
           </div>
         </div>
       </header>
+
+      <section id="machine-help" className="mt-5 scroll-mt-4" aria-label="机器识别与远程工具帮助">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-xs sm:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 className="flex items-center gap-2 text-[15px] font-semibold"><MonitorCog className="size-4 text-brand" />机器识别与远程工具帮助</h2>
+              <p className="mt-1 text-[11.5px] leading-relaxed text-muted-foreground">浏览器只给出平台猜测，架构 / musl / Rosetta 需要你人工确认。只列官方域名，不镜像或代下载第三方安装包。</p>
+            </div>
+            <Badge variant="outline" className="gap-1 text-[10px]"><ShieldCheck className="size-3" />官方域名 · 可手动切换</Badge>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <Badge variant="brand" className="gap-1 text-[10px]"><Laptop className="size-3" />浏览器猜测：{optionLabel(detectedHelpPlatform)}</Badge>
+            <Badge variant="outline" className="text-[10px]">当前选择：{optionLabel(helpPlatform)}</Badge>
+            <label htmlFor="dl-help-platform" className="sr-only">手动选择平台版本</label>
+            <select id="dl-help-platform" value={helpPlatform} onChange={(e) => setHelpPlatform(e.target.value)} aria-label="手动选择平台版本" className="h-8 max-w-[15rem] rounded-md border border-input bg-background px-2.5 text-[11.5px] shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/40">
+              {HELP_PLATFORM_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+            {detectedHelpPlatform !== helpPlatform ? (
+              <Button variant="ghost" size="xs" onClick={() => setHelpPlatform(detectedHelpPlatform)}>回到我的平台</Button>
+            ) : null}
+          </div>
+          {(() => {
+            const group = helpGroup(helpPlatform)
+            return group ? (
+              <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
+                <div className="min-w-0 rounded-lg border border-border bg-muted/30 p-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <h3 className="text-[12.5px] font-semibold">匹配版本：{group.os}</h3>
+                    <span className="font-mono text-[10.5px] text-muted-foreground">架构：{group.arch.join(' / ')}</span>
+                  </div>
+                  <ul className="mt-2 space-y-1 text-[11.5px] leading-relaxed">
+                    {group.picks.map((pick) => <li key={pick}>· {pick}</li>)}
+                    {group.checks.map((check) => <li key={check} className="text-muted-foreground">· {check}</li>)}
+                  </ul>
+                </div>
+                <div className="min-w-0 rounded-lg border border-border bg-muted/30 p-3">
+                  <h3 className="text-[12.5px] font-semibold">安装前校验清单</h3>
+                  <ol className="mt-2 space-y-1 text-[11.5px] leading-relaxed text-muted-foreground">
+                    <li>1. 只在下方官方域名下载；拒绝镜像站与搜索广告下载器。</li>
+                    <li>2. 核对文件名与版本号是否与官方页面一致。</li>
+                    <li>3. 尽量用官方公布的签名 / SHA256 校验值比对。</li>
+                    <li>4. 安装时拒绝捆绑软件与来路不明的驱动。</li>
+                    <li>5. 首次连接前用可信渠道确认对方的会话 ID。</li>
+                  </ol>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-[11.5px] leading-relaxed">
+                <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-300" />
+                <div><b>未匹配到推荐版本</b><p className="mt-1 text-muted-foreground">请手动选择 Windows / macOS / Linux / 移动端，架构与 musl / Rosetta 需自行确认。</p></div>
+              </div>
+            )
+          })()}
+          <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {REMOTE_TOOLS.map((tool) => (
+              <a key={tool.id} href={tool.url} target="_blank" rel="noreferrer noopener" className="min-w-0 rounded-lg border border-border bg-background p-2.5 transition hover:border-brand/50 hover:bg-muted/40" aria-label={tool.name + ' 官方网站'}>
+                <span className="flex items-center justify-between gap-2 text-[12px] font-semibold"><span className="truncate">{tool.name}</span><ExternalLink className="size-3 shrink-0 text-muted-foreground" /></span>
+                <span className="mt-1 block truncate font-mono text-[10px] text-brand">{tool.url}</span>
+                <span className="mt-1 block text-[10.5px] leading-relaxed text-muted-foreground">{tool.note}</span>
+              </a>
+            ))}
+          </div>
+          <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-[11.5px] leading-relaxed">
+            <ShieldAlert className="mt-0.5 size-4 shrink-0 text-amber-600 dark:text-amber-300" />
+            <div><b>安全提示 · 不收集凭据</b><p className="mt-1 text-muted-foreground">{HELP_NOTICE}</p></div>
+          </div>
+        </div>
+      </section>
 
       {/* toolbar */}
       <section className="mt-5" aria-label="搜索与筛选">
