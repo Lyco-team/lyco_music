@@ -28,7 +28,7 @@ export * from './text/s2t'
 export * from './text/comment'
 export * from './i18n'
 
-export const CORE_VERSION = '0.2.63'
+export const CORE_VERSION = '0.2.64'
 
 /**
  * 应用对外版本号。与根 package.json 同源 —— 发版时两处一起改，
