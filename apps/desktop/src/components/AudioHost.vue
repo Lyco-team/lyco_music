@@ -96,7 +96,12 @@ onMounted(() => {
     // 换 src 会把 playbackRate 重置成 1，必须每次重新灌
     applyRate()
     armWatchdog()
-    await a.play()
+    // 切 src 后立刻 play()，若这次 play 被后续 reset/replace 打断，Chromium 会
+    // reject AbortError。不能把它当故障弹给用户：真正存活的那次播放会继续。
+    try { await a.play() } catch (e) {
+      if (e instanceof Error && e.name === 'AbortError') return
+      throw e
+    }
   })
 })
 

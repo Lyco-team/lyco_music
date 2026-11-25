@@ -41,6 +41,11 @@ describe('isRetriablePlayError', () => {
     expect(isRetriablePlayError(new Error('Failed to fetch'))).toBe(false)
     expect(isRetriablePlayError(new Error('[lxmn/wy] search HTTP 502'))).toBe(false)
   })
+
+  it('切 src 被打断的 AbortError 必须重试，而不是让用户点两次', () => {
+    expect(isRetriablePlayError(err('AbortError', 'The play() request was interrupted'))).toBe(true)
+    expect(isRetriablePlayError(new Error('Aborted due to timeout'))).toBe(false)
+  })
 })
 
 describe('describePlayError', () => {

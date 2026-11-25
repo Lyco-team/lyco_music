@@ -10,6 +10,7 @@
  * src/player.ts 的 next()/prev()，通过事件回传。
  */
 import TrackPlayer, { Event } from 'react-native-track-player'
+import { next, prev } from '../player'
 
 export default async function playbackService(): Promise<void> {
   TrackPlayer.addEventListener(Event.RemotePlay, () => TrackPlayer.play())
@@ -18,12 +19,13 @@ export default async function playbackService(): Promise<void> {
   TrackPlayer.addEventListener(Event.RemoteSeek, e => {
     void TrackPlayer.seekTo(e.position)
   })
-  // 通知栏的上一首 / 下一首：TrackPlayer 队列里已经有预取的相邻曲目，
-  // 直接让它原生跳转，避免后台时还要走一遍 JS 取流。
+  // 通知栏 / 耳机按键的上一首、下一首必须走 JS 的 next()/prev()。
+  // 原生队列里只有当前这一首（换曲用 reset+add 重新签名），直接 skipToNext()
+  // 要么停在原曲、要么把通知清成空队列 —— 用户看到的就是「播着播着停了」。
   TrackPlayer.addEventListener(Event.RemoteNext, () => {
-    void TrackPlayer.skipToNext().catch(() => undefined)
+    void next(false).catch(() => undefined)
   })
   TrackPlayer.addEventListener(Event.RemotePrevious, () => {
-    void TrackPlayer.skipToPrevious().catch(() => undefined)
+    void prev().catch(() => undefined)
   })
 }

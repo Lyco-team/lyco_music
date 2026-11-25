@@ -312,7 +312,7 @@ export const availableSources = computed(() => listSources().filter(id => hasSou
  * 同一首歌上一分钟能播、下一分钟就 403 —— 实测复现过。
  * 拿到地址 ≠ 能播，而 <audio> 只会在真正加载时才发现，所以必须留重试。
  */
-const MAX_STREAM_RETRY = 2
+const MAX_STREAM_RETRY = 3
 
 /** 这次播放已经重试到第几级（0=首次，1=原源重取，2=跨源） */
 let streamAttempt = 0
@@ -408,9 +408,12 @@ async function ensureStreamUrl(): Promise<string> {
 async function recoverStreamError(): Promise<void> {
   const item = state.playingItem ?? current.value
   if (!item) return
+  // AudioHost 的 play() promise 被新 src 打断时会抛 AbortError（用户点第一首歌
+  // 最常见的报错），url 可能已被清空 —— 这时必须从 0 重新走完整取流阶梯。
+  const from = state.url ? Math.max(1, streamAttempt) : 0
   // 已经在重试链里就别插队，否则会和正在跑的那次互相覆盖 url
   if (state.loading) return
-  await resolveAndPlay(item, Math.max(1, streamAttempt))
+  await resolveAndPlay(item, from)
 }
 
 /** 时长工具与试听判定都放在内核（纯函数，可被单测覆盖） */

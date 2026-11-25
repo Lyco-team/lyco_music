@@ -24,11 +24,15 @@ import {
   findLineIndex,
   resolveWithFallback,
   TRIAL_EXHAUSTED_MESSAGE,
+  describePlayError,
+  isRetriablePlayError,
+  toSecurePlaybackUrl,
   type LyricInfo,
   type LyricLine,
   type MusicItem,
   type Quality,
   type ResolveOptions,
+  type SourceId,
 } from '@lxmn/core'
 import { library } from './sync'
 import { removeQueueAt } from './lib/queue'
@@ -89,9 +93,23 @@ export function usePlayerState(): MobilePlayerState {
   return useSyncExternalStore(subscribe, snapshot, snapshot)
 }
 
+/** 非 React 调用方 / 单测读取当前播放器快照。 */
+export function getPlayerState(): MobilePlayerState {
+  return snapshot()
+}
+
 export function currentItem(): MusicItem | null {
   return state.queue[state.index] ?? null
 }
+
+/** 与桌面端一致：一次播放最多几次取流自愈（含最终跨源） */
+const MAX_STREAM_RETRY = 3
+
+/** 本次播放已经走到第几级；PlaybackError 事件直接从这里接着重试 */
+let streamAttempt = 0
+
+/** 这些源的地址已经证实放不出来，本轮重试不要再选 */
+const badSources = new Set<SourceId>()
 
 /** 音质循环顺序（与内核 qualityOrder 一致，从高到低） */
 const QUALITY_ORDER: Quality[] = ['master', 'atmos', 'hires', 'flac24bit', 'flac', '320k', '128k']
@@ -177,21 +195,6 @@ async function ensureReady(): Promise<boolean> {
 }
 
 /**
- * 播放地址统一升级到 https。
- *
- * 网易云给的直链是 `http://m701.music.126.net/...`。Android 从 targetSdk 28
- * 起默认禁止明文流量，ExoPlayer 会直接拒绝这个地址 —— 而它的报错**不会**
- * 冒到 JS 层（我们没监听 PlaybackError 之前），表现就是
- * 「进度条在走、封面在转、一点声音都没有」。
- *
- * 这几个 CDN 实测都支持 https（同一路径换协议返回 200 且是完整音频），
- * 所以直接升级，比在 manifest 里放开明文更干净。
- */
-function toSecureUrl(url: string): string {
-  return String(url ?? '').replace(/^http:\/\//i, 'https://')
-}
-
-/**
  * 取流并播放。
  *
  * 走内核的 resolveWithFallback，而不是直接 getMusicUrl：
@@ -199,43 +202,69 @@ function toSecureUrl(url: string): string {
  * 桌面端一直有跨源兜底（去酷狗酷我咪咕找正主），移动端之前漏了，
  * 表现就是「搜得到、点播放就报 VIP 专享」。
  */
-async function resolveAndPlay(item: MusicItem, opts: ResolveOptions = {}, failureMessage?: string): Promise<void> {
+async function resolveAndPlay(
+  item: MusicItem,
+  opts: ResolveOptions = {},
+  failureMessage?: string,
+  from = 0,
+): Promise<void> {
   state.loading = true
   state.error = ''
-  emit()
-  try {
-    const { info, item: played } = await resolveWithFallback(item, state.quality, opts)
-    // 实际拿到的音质可能与请求的不同（高音质被锁时降档了），如实回填
-    state.quality = info.quality
-    // 串源时封面也跟着换：原曲封面可能取不到，串到的那个源有
-    if (played.picUrl) state.picUrl = played.picUrl
-    else if (!state.picUrl && item.picUrl) state.picUrl = item.picUrl
+  let lastErr: unknown = null
 
-    const url = toSecureUrl(info.url)
-    await TrackPlayer.reset()
-    await TrackPlayer.add({
-      id: String(played.songmid ?? played.id ?? url),
-      url,
-      title: played.name,
-      artist: played.singer,
-      album: played.albumName ?? '',
-      artwork: toSecureUrl(played.picUrl ?? '') || undefined,
-    })
-    await TrackPlayer.play()
-    // reset + add 会把速率打回 1，这里补回用户选的倍速
-    await applyRate()
-    playingItem = played
-    state.playing = true
-    // 播放记录：只有真的出流了才记，避免把取流失败的歌也算进「最近播放」。
-    // 失败不影响播放本身。
-    void library.recordPlay(played).catch(() => undefined)
-  } catch (e) {
-    state.error = failureMessage ?? (e instanceof Error ? e.message : String(e))
-    state.playing = false
-  } finally {
-    state.loading = false
-    emit()
+  for (let attempt = from; attempt <= MAX_STREAM_RETRY; attempt++) {
+    streamAttempt = attempt
+    try {
+      // 第一级保留原源（CDN 签名过期时重取一次就好）；最后一级显式排除原源，
+      // 等价于桌面端「这个源确实放不了这首歌」那一档。
+      const nextOpts: ResolveOptions = {
+        ...opts,
+        avoid: [...new Set([...(opts.avoid ?? []), ...badSources])],
+        exclude: attempt >= MAX_STREAM_RETRY ? item.source : opts.exclude,
+      }
+      const { info, item: played } = await resolveWithFallback(item, state.quality, nextOpts)
+      // 实际拿到的音质可能与请求的不同（高音质被锁时降档了），如实回填
+      state.quality = info.quality
+      if (played.picUrl) state.picUrl = played.picUrl
+      else if (!state.picUrl && item.picUrl) state.picUrl = item.picUrl
+
+      const url = toSecurePlaybackUrl(info.url)
+      await TrackPlayer.reset()
+      await TrackPlayer.add({
+        id: String(played.songmid ?? played.id ?? url),
+        url,
+        title: played.name,
+        artist: played.singer,
+        album: played.albumName ?? '',
+        artwork: toSecurePlaybackUrl(played.picUrl ?? '') || undefined,
+      })
+      await TrackPlayer.play()
+      await applyRate()
+      playingItem = played
+      state.playing = true
+      streamAttempt = 0
+      // 播放记录：只有真的出流了才记，避免把取流失败的歌也算进「最近播放」。
+      void library.recordPlay(played).catch(() => undefined)
+      state.loading = false
+      emit()
+      return
+    } catch (e) {
+      lastErr = e
+      // 地址已经交给原生播放器才失败 -> 这个源给的地址是坏的，后面别再用
+      if (playingItem) badSources.add(playingItem.source)
+      else badSources.add(item.source)
+      if (!isRetriablePlayError(e) || attempt >= MAX_STREAM_RETRY) break
+      await new Promise<void>(r => setTimeout(() => r(), 260))
+    }
   }
+
+  state.error = failureMessage ?? describePlayError(lastErr)
+  state.playing = false
+  state.loading = false
+  if (nativePlayerReady) {
+    await safePlayerAction('清空播放列表', async () => { await TrackPlayer.reset() })
+  }
+  emit()
 }
 
 /**
@@ -343,6 +372,8 @@ export async function play(item: MusicItem, queue?: MusicItem[]): Promise<void> 
   }
   trialRetried = false
   playingItem = null
+  streamAttempt = 0
+  badSources.clear()
   emit()
   await Promise.all([resolveAndPlay(item), loadMeta(item)])
 }
@@ -508,7 +539,13 @@ export async function prev(): Promise<void> {
 }
 
 export async function toggle(): Promise<void> {
-  if (!currentItem()) return
+  const item = currentItem()
+  if (!item) return
+  // 失败后原生队列被 reset，直接 play() 什么也不会发生 —— 必须重新取流。
+  if (!state.playing && !playingItem && !state.loading) {
+    await play(item)
+    return
+  }
   await safePlayerAction('播放控制', async () => {
     const s = await TrackPlayer.getPlaybackState()
     if (s.state === State.Playing) await TrackPlayer.pause()
@@ -529,6 +566,8 @@ export async function retry(): Promise<void> {
   if (!item) return
   trialRetried = false
   playingItem = null
+  streamAttempt = 0
+  badSources.clear()
   await resolveAndPlay(item)
 }
 
@@ -536,6 +575,8 @@ export async function retry(): Promise<void> {
 export async function setQuality(q: Quality): Promise<void> {
   state.quality = q
   trialRetried = false
+  streamAttempt = 0
+  badSources.clear()
   emit()
   const item = currentItem()
   if (item) await resolveAndPlay(item)
@@ -635,10 +676,25 @@ export function useTrackPlayerEvents(): void {
        * 界面上「正在播放」，实际一点声音都没有，用户只能猜。
        */
       TrackPlayer.addEventListener(Event.PlaybackError, e => {
-        state.playing = false
-        state.loading = false
-        state.error = describePlaybackError(e)
-        emit()
+        // 和桌面端 AudioHost 的 @error 一样：先自愈再报错。
+        // 用户看到的「播放停止」很多就是一次过期 CDN 地址，不该直接弹错误。
+        const item = playingItem ?? currentItem()
+        if (!item || state.loading) {
+          state.playing = false
+          state.loading = false
+          state.error = describePlaybackError(e)
+          emit()
+          return
+        }
+        if (!isRetriableNativeError(e)) {
+          state.playing = false
+          state.loading = false
+          state.error = describePlaybackError(e)
+          emit()
+          return
+        }
+        if (playingItem) badSources.add(playingItem.source)
+        void resolveAndPlay(item, {}, undefined, Math.min(streamAttempt + 1, MAX_STREAM_RETRY))
       }),
       /**
        * 进度事件带真实 duration；只有这里才能识别试听片段。
@@ -652,6 +708,20 @@ export function useTrackPlayerEvents(): void {
     return () => { for (const s of subs) s.remove() }
   }, [])
   useEffect(() => { if (n) emit() }, [n])
+}
+
+/** ExoPlayer 的失败里，哪些值得重新取流（CDN 地址过期 / 权限签名错误） */
+function isRetriableNativeError(e: { code?: string; message?: string }): boolean {
+  const raw = String(e?.message ?? '')
+  const code = String(e?.code ?? '')
+  // 明确的网络中断 / 解码不支持：换源也救不了，避免无限自愈
+  if (/Decod|codec|Unsupported/i.test(raw)) return false
+  if (/cleartext|明文/i.test(raw)) return false
+  if (/timeout|timed out/i.test(raw)) return true
+  if (/404|403|Not Found|Forbidden/i.test(raw)) return true
+  if (/SSL|Certificate|handshake/i.test(raw)) return true
+  if (/ios|android/i.test(code) && /source/i.test(raw)) return true
+  return /source|load|failed|error/i.test(raw + code)
 }
 
 /** 把 ExoPlayer 的错误码翻译成能行动的中文 */
