@@ -619,6 +619,7 @@ let lyricLocked = false
 let lyricBaseHeight = 0
 /** 正在被用户拖动：这期间不把 moved 写盘 */
 let lyricDragging = false
+let lyricResizing = false
 
 const lyricStatePath = () => path.join(app.getPath('userData'), 'lyric-window.json')
 
@@ -739,7 +740,7 @@ async function createLyricWindow() {
     // 面板展开导致的高度变化不是用户意图，不能写进「下次打开的位置尺寸」
     if (lyricBaseHeight) return
     // 拖动过程中每一帧都会触发 moved，等松手再落盘一次就够了
-    if (lyricDragging) return
+    if (lyricDragging || lyricResizing) return
     const b = lyricWin.getBounds()
     void saveLyricState({ x: b.x, y: b.y, width: b.width, height: b.height })
   }
@@ -855,6 +856,80 @@ function stopLyricDrag(persist = true) {
   // 尺寸用拖动开始时的值：setBounds 在非 100% 缩放下会取整，每次 +1px 会越拖越胖
   void saveLyricState({ x: b.x, y: b.y, width: drag.width, height: drag.height })
 }
+
+/**
+ * 调整歌词窗口大小（边缘/角落手柄）。
+ *
+ * 为什么像拖动一样在主进程算：窗口是 transparent + frameless，
+ * 系统原生边缘缩放命中不到；渲染层拿到的 clientX/screenX 又会随窗口
+ * 缩放而变，自己算会自激。所以手柄只报「按住的是哪条边/角」，
+ * 真正的尺寸由主进程每帧读系统光标算出来。
+ *
+ * 手柄方向语义：按住右边缘拖 = 右边跟着鼠标，左上角不动。
+ */
+const LYRIC_MIN_W = 280
+const LYRIC_MIN_H = 90
+let lyricResize = null
+
+function stopLyricResize(persist = true) {
+  if (!lyricResize) return
+  clearInterval(lyricResize.timer)
+  const rz = lyricResize
+  lyricResize = null
+  lyricResizing = false
+  if (!persist || !lyricWin || lyricWin.isDestroyed()) return
+  const b = lyricWin.getBounds()
+  void saveLyricState({ x: b.x, y: b.y, width: b.width, height: b.height })
+}
+
+ipcMain.handle('lxmn:lyric:resize-start', async (_e, edge) => {
+  if (!lyricWin || lyricWin.isDestroyed()) return null
+  stopLyricResize(false)
+  const b = lyricWin.getBounds()
+  const dir = String(edge || '')
+  if (!/^[ns][ew]$|^[nswe]$/.test(dir)) return null
+  lyricResizing = true
+  lyricResize = {
+    dir,
+    bounds: b,
+    cursor: screen.getCursorScreenPoint(),
+    still: 0,
+    timer: setInterval(() => {
+      if (!lyricWin || lyricWin.isDestroyed()) { stopLyricResize(false); return }
+      const p = screen.getCursorScreenPoint()
+      if (p.x === lyricResize.cursor.x && p.y === lyricResize.cursor.y) {
+        if (++lyricResize.still > 300) stopLyricResize()
+        return
+      }
+      lyricResize.still = 0
+      const rz = lyricResize
+      const d = { x: p.x - rz.cursor.x, y: p.y - rz.cursor.y }
+      const area = screen.getDisplayMatching(rz.bounds).workArea
+      let { x, y, width, height } = rz.bounds
+      if (dir.includes('e')) width = Math.max(LYRIC_MIN_W, rz.bounds.width + d.x)
+      if (dir.includes('s')) height = Math.max(LYRIC_MIN_H, rz.bounds.height + d.y)
+      if (dir.includes('w')) {
+        // 左边跟着鼠标：宽变了，x 反向补偿，保证右边缘不动
+        width = Math.max(LYRIC_MIN_W, rz.bounds.width - d.x)
+        x = rz.bounds.x + (rz.bounds.width - width)
+      }
+      if (dir.includes('n')) {
+        height = Math.max(LYRIC_MIN_H, rz.bounds.height - d.y)
+        y = rz.bounds.y + (rz.bounds.height - height)
+      }
+      // 拖出屏幕外就别让它消失
+      if (x + width < area.x + 40 || x > area.x + area.width - 40) return
+      if (y + height < area.y + 40 || y > area.y + area.height - 40) return
+      lyricWin.setBounds({ x: Math.round(x), y: Math.round(y), width: Math.round(width), height: Math.round(height) })
+    }, 16),
+  }
+  return b
+})
+
+ipcMain.handle('lxmn:lyric:resize-end', async () => {
+  stopLyricResize()
+  return true
+})
 
 ipcMain.handle('lxmn:lyric:drag-start', async () => {
   if (!lyricWin || lyricWin.isDestroyed()) return null

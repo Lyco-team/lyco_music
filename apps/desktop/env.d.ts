@@ -137,6 +137,8 @@ interface LxmnLyricApi {
   release: () => Promise<boolean>
   dragStart: () => Promise<{ x: number; y: number; width: number; height: number } | null>
   dragEnd: () => Promise<boolean>
+  resizeStart: (edge: string) => Promise<{ x: number; y: number; width: number; height: number } | null>
+  resizeEnd: () => Promise<boolean>
   seek: (time: number) => Promise<boolean>
   onSeekRequest: (cb: (time: number) => void) => () => void
   /** 主窗口推送频谱数据（3.20） */

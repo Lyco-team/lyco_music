@@ -364,6 +364,7 @@ function onPressMove(e: MouseEvent): void {
 }
 
 function onPressUp(): void {
+  onResizeUp()
   const line = pressLine
   const wasDragging = dragging
   pressAt = null
@@ -376,6 +377,40 @@ function onPressUp(): void {
   }
   // 没拖动就是单击：点歌词行跳到那一句
   if (line !== null) seekTo(line)
+}
+
+/* ---------------- 调整窗口大小（边缘/角落手柄） ---------------- */
+
+/**
+ * 系统原生边缘缩放在 transparent + frameless 窗口上命中不到，
+ * 所以自己画手柄：渲染层只报方向，尺寸由主进程按系统光标算（见 main.cjs）。
+ * 手柄自带 mousedown.stop，不会和拖动/单击歌词的按下逻辑抢。
+ */
+type ResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
+
+const RESIZE_EDGES: { edge: ResizeEdge; class: string; cursor: string }[] = [
+  { edge: 'n', class: 'inset-x-2 -top-0 h-[5px]', cursor: 'ns-resize' },
+  { edge: 's', class: 'inset-x-2 bottom-0 h-[5px]', cursor: 'ns-resize' },
+  { edge: 'w', class: 'inset-y-2 left-0 w-[5px]', cursor: 'ew-resize' },
+  { edge: 'e', class: 'inset-y-2 right-0 w-[5px]', cursor: 'ew-resize' },
+  { edge: 'nw', class: 'top-0 left-0 size-[10px]', cursor: 'nwse-resize' },
+  { edge: 'ne', class: 'top-0 right-0 size-[10px]', cursor: 'nesw-resize' },
+  { edge: 'sw', class: 'bottom-0 left-0 size-[10px]', cursor: 'nesw-resize' },
+  { edge: 'se', class: 'bottom-0 right-0 size-[10px]', cursor: 'nwse-resize' },
+]
+
+let resizing = false
+
+function onResizeDown(e: MouseEvent, edge: ResizeEdge): void {
+  if (locked.value || e.button !== 0) return
+  resizing = true
+  void api?.resizeStart(edge).catch(() => null)
+}
+
+function onResizeUp(): void {
+  if (!resizing) return
+  resizing = false
+  void api?.resizeEnd().catch(() => false)
 }
 
 async function close(): Promise<void> {
@@ -399,6 +434,19 @@ async function resetWindow(): Promise<void> {
     @contextmenu="openMenu"
     @mousedown="onPressDown"
   >
+    <!-- 边缘/角落缩放手柄：悬停且未锁定时出现，按下交给主进程算尺寸 -->
+    <template v-if="hovering && !locked && !menuOpen">
+      <div
+        v-for="h in RESIZE_EDGES"
+        :key="h.edge"
+        class="absolute z-30"
+        :class="h.class"
+        :style="{ cursor: h.cursor }"
+        @mousedown.stop="onResizeDown($event, h.edge)"
+        @mouseup.stop="onResizeUp"
+        @dblclick.stop
+      />
+    </template>
     <!-- 歌词本体：占满剩余高度并垂直居中；面板展开时它自然缩到上半部分 -->
     <div
       class="flex min-h-0 flex-1 flex-col items-center px-4"

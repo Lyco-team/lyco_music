@@ -99,6 +99,8 @@ contextBridge.exposeInMainWorld('lxmnNative', {
     release: () => ipcRenderer.invoke('lxmn:lyric:release'),
     /** 拖动窗口：渲染层只发「按下/松手」，坐标由主进程读系统光标 */
     dragStart: () => ipcRenderer.invoke('lxmn:lyric:drag-start'),
+    resizeStart: (edge) => ipcRenderer.invoke('lxmn:lyric:resize-start', edge),
+    resizeEnd: () => ipcRenderer.invoke('lxmn:lyric:resize-end'),
     dragEnd: () => ipcRenderer.invoke('lxmn:lyric:drag-end'),
     /** 歌词窗口点时间条/歌词行：请求主窗口跳转 */
     seek: (time) => ipcRenderer.invoke('lxmn:lyric:seek', time),
